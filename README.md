@@ -2,10 +2,10 @@
 
 ### Features
 
-- 📸 **Add Clothes:** Upload photos of your wardrobe items to build your online closet.
-- 👕 **Create Outfits:** Combine different clothing pieces to visualize stylish outfits.
-- 🌍 **Community Sharing:** Share your favorite outfits with other users to inspire and get inspired.
-- 💬 **Engage & Interact:** Like, comment, and engage with outfits shared by others.
+- **Add Clothes:** Upload photos of your wardrobe items to build your online closet.
+- **Create Outfits:** Combine different clothing pieces to visualize stylish outfits.
+- **Community Sharing:** Share your favorite outfits with other users to inspire and get inspired.
+- **Engage & Interact:** Like, comment, and engage with outfits shared by others.
 
 ### Technologies Used
 
