@@ -1,4 +1,4 @@
-### E-Closet is a web application built with React, Chakra UI, NestJS, and TypeScript. It allows users to create a digital version of their wardrobe by uploading photos of their clothes. Users can mix and match items to create outfits, which can be shared with the community for feedback and interaction.
+### e-wardrobe is a web application built with React, Chakra UI, NestJS, and TypeScript. It allows users to create a digital version of their wardrobe by uploading photos of their clothes. Users can mix and match items to create outfits, which can be shared with the community for feedback and interaction.
 
 ### Features
 
