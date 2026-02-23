@@ -18,11 +18,9 @@ import {
   Box,
 } from "@chakra-ui/react";
 import { FC, useState } from "react";
-import ImagePicker from "../../../components/ui/ImagePicker";
+import { NewClothe } from "../../../interfaces/clothe";
 import { useMutation } from "react-query";
 import Modal from "../../../components/ui/Modal";
-import { ImagePickerItemData } from "../../../interfaces/components";
-import { NewClothe } from "../../../interfaces/clothe";
 import Select from "../../../components/ui/Select";
 import { CLOTHE_TYPES, SEASONS } from "../../../constants/clotheTypes";
 import { createClothe } from "../../../services/clothe";
@@ -39,6 +37,10 @@ const steps = [
   { title: "Finalize", description: "Add notes" },
 ];
 
+import StudioDropzone from "../../../components/Studio/StudioDropzone";
+import AIProcessor from "../../../components/Studio/AIProcessor";
+import StudioToolbar from "../../../components/Studio/StudioToolbar";
+
 const CreateItem: FC<CreateItemProps> = ({ isOpen, onClose }) => {
   const { activeStep, goToNext, goToPrevious } = useSteps({
     index: 0,
@@ -46,15 +48,27 @@ const CreateItem: FC<CreateItemProps> = ({ isOpen, onClose }) => {
   });
 
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [rawImage, setRawImage] = useState<string | null>(null);
+  const [processedImage, setProcessedImage] = useState<string | null>(null);
+  const [activeTool, setActiveTool] = useState<"restore" | "erase" | null>(null);
   const [season, setSeason] = useState<string[]>([]);
   const [category, setCategory] = useState("");
   const [notes, setNotes] = useState("");
 
   const toast = useToast();
 
-  const handleImageChange = (value: ImagePickerItemData) => {
-    const filesToStore = value.files.map((image: any) => image.file);
-    setSelectedImages(filesToStore);
+  const handleUpload = (file: File) => {
+    setSelectedImages([file]);
+    const reader = new FileReader();
+    reader.onload = (e) => setRawImage(e.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleProcessed = (blob: Blob) => {
+    // Create a new file from the blob to be uploaded
+    const file = new File([blob], "processed_item.png", { type: "image/png" });
+    setSelectedImages([file]);
+    setProcessedImage(URL.createObjectURL(blob));
   };
 
   const { mutate: createClotheMutate, isLoading: createClotheIsLoading } =
@@ -68,6 +82,7 @@ const CreateItem: FC<CreateItemProps> = ({ isOpen, onClose }) => {
       toast({ title: "Please select an image", status: "error", position: "top" });
       return;
     }
+    // In a real app, we would send the processed PNG Blob here
     createClotheMutate(
       {
         images: selectedImages,
@@ -93,6 +108,7 @@ const CreateItem: FC<CreateItemProps> = ({ isOpen, onClose }) => {
       isOpen={isOpen}
       onClose={onClose}
       title="NEW CLOSET ITEM"
+      size="xl"
     >
       <ModalBody py={8}>
         <VStack spacing={8} align="stretch">
@@ -116,17 +132,43 @@ const CreateItem: FC<CreateItemProps> = ({ isOpen, onClose }) => {
           </Stepper>
 
           {/* Step Contents */}
-          <Box minH="300px">
+          <Box minH="400px">
             {activeStep === 0 && (
-              <VStack spacing={6}>
-                <Text fontWeight="600" fontSize="sm" color="neutral.500" alignSelf="flex-start" textTransform="uppercase" letterSpacing="widest">
-                  Step 01 / Photo
-                </Text>
-                <ImagePicker
-                  onChange={handleImageChange}
-                  label="DROP OR SELECT IMAGE"
-                  name="image"
-                />
+              <VStack spacing={6} position="relative">
+                <HStack w="100%" justify="space-between">
+                  <Text fontWeight="600" fontSize="sm" color="neutral.500" textTransform="uppercase" letterSpacing="widest">
+                    Step 01 / Studio
+                  </Text>
+                  {rawImage && (
+                    <Button 
+                      text="RESET" 
+                      variant="ghost" 
+                      size="xs" 
+                      onClick={() => {
+                        setRawImage(null);
+                        setProcessedImage(null);
+                        setSelectedImages([]);
+                      }} 
+                    />
+                  )}
+                </HStack>
+
+                {!rawImage ? (
+                  <StudioDropzone onUpload={handleUpload} />
+                ) : (
+                  <Box w="100%" position="relative">
+                    <AIProcessor 
+                      originalImage={rawImage} 
+                      onProcessed={handleProcessed} 
+                    />
+                    {processedImage && (
+                      <StudioToolbar 
+                        activeTool={activeTool}
+                        onToolSelect={setActiveTool}
+                      />
+                    )}
+                  </Box>
+                )}
               </VStack>
             )}
 
@@ -182,7 +224,7 @@ const CreateItem: FC<CreateItemProps> = ({ isOpen, onClose }) => {
               text="NEXT"
               onClick={goToNext}
               width="100%"
-              isDisabled={activeStep === 0 && selectedImages.length === 0}
+              isDisabled={activeStep === 0 && !processedImage}
             />
           ) : (
             <Button
