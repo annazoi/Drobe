@@ -10,11 +10,15 @@ export interface NewOutfit {
 
 export interface Outfit {
   id: string;
-  clothes: Clothe[];
+  clothes: { clothe: Clothe }[];
   colorScheme?: string;
   rating?: number;
   notes?: string;
   type: string;
+  userId: {
+    username: string;
+    id: string;
+  };
   [key: string]: any;
 }
 

@@ -44,8 +44,8 @@ const Button: React.FC<ButtonProps> = ({
         bg
           ? bg
           : !secondary
-          ? useColorModeValue("pink.300", "black")
-          : useColorModeValue("gray.100", "gray.300")
+          ? useColorModeValue("brand.500", "black")
+          : useColorModeValue("neutral.100", "neutral.300")
       }
       variant={variant || "solid"}
       onClick={onClick}

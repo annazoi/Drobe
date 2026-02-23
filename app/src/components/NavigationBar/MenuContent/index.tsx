@@ -1,44 +1,33 @@
 import { FaHome } from "react-icons/fa";
 import { BiCloset } from "react-icons/bi";
-import { CgProfile } from "react-icons/cg";
-import { IoMdSettings, IoMdLogOut } from "react-icons/io";
+import { IoMdLogOut } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
-import { Button, useColorModeValue } from "@chakra-ui/react";
+import { Button, VStack, Icon, Text } from "@chakra-ui/react";
 import { authStore } from "../../../store/authStore";
 import { GrContact } from "react-icons/gr";
 import { IoInformationCircleSharp } from "react-icons/io5";
+
+import { IoColorPaletteOutline, IoJournalOutline } from "react-icons/io5";
+
 export const isLoggedInLinks: any = [
   {
     id: 1,
     name: "Home",
     path: "/home",
-    icon: <FaHome />,
+    icon: FaHome,
   },
   {
     id: 2,
-    name: "My Closet",
-    path: "/closet",
-    icon: <BiCloset />,
+    name: "Studio",
+    path: "/studio",
+    icon: IoColorPaletteOutline,
   },
   {
     id: 3,
-    name: "Profile",
-    path: "/profile",
-    icon: <CgProfile />,
+    name: "Archive",
+    path: "/archive",
+    icon: IoJournalOutline,
   },
-  {
-    id: 4,
-    name: "Settings",
-    path: "/settings",
-    icon: <IoMdSettings />,
-  },
-  // {
-  //   id: 5,
-  //   name: "Logout",
-  //   path: "/logout",
-  //   icon: <IoMdLogOut />,
-  //   onClick: () => {},
-  // },
 ];
 
 const isLogOutLinks: any = [
@@ -46,13 +35,13 @@ const isLogOutLinks: any = [
     id: 1,
     name: "About Us",
     path: "/about",
-    icon: <IoInformationCircleSharp size={23} />,
+    icon: IoInformationCircleSharp,
   },
   {
     id: 2,
     name: "Contact",
     path: "/contact",
-    icon: <GrContact />,
+    icon: GrContact,
   },
 ];
 
@@ -64,54 +53,46 @@ const MenuContent = () => {
     logOut();
     navigate("/login");
   };
+
+  const links = isLoggedIn ? isLoggedInLinks : isLogOutLinks;
+
   return (
-    <div style={{ display: "grid", gap: "20px" }}>
-      {isLoggedIn
-        ? isLoggedInLinks.map((link: any) => (
-            <Button
-              key={link.id}
-              leftIcon={link.icon}
-              bg={useColorModeValue("pink.200", "gray.700")}
-              onClick={() => {
-                navigate(link.path);
-              }}
-              //   _hover={{
-              //     textDecoration: "none",
-              //     bg: "primary.400",
-              //     color: "white",
-              //   }}
-            >
-              {link.name}
-            </Button>
-          ))
-        : isLogOutLinks.map((link: any) => (
-            <Button
-              key={link.id}
-              leftIcon={link.icon}
-              bg={useColorModeValue("pink.200", "gray.700")}
-              onClick={() => {
-                navigate(link.path);
-              }}
-              //   _hover={{
-              //     textDecoration: "none",
-              //     bg: "primary.400",
-              //     color: "white",
-              //   }}
-            >
-              {link.name}
-            </Button>
-          ))}
+    <VStack spacing={4} align="stretch" w="100%">
+      {links.map((link: any) => (
+        <Button
+          key={link.id}
+          variant="ghost"
+          justifyContent="flex-start"
+          onClick={() => navigate(link.path)}
+          py={6}
+          px={4}
+          _hover={{ bg: "neutral.100" }}
+          leftIcon={<Icon as={link.icon} boxSize={5} />}
+        >
+          <Text fontSize="sm" fontWeight="500">
+            {link.name}
+          </Text>
+        </Button>
+      ))}
 
       {isLoggedIn && (
         <Button
-          leftIcon={<IoMdLogOut />}
+          variant="ghost"
+          justifyContent="flex-start"
           onClick={handleLogOut}
-          bg={useColorModeValue("pink.100", "gray.700")}
+          py={6}
+          px={4}
+          mt="auto"
+          _hover={{ bg: "neutral.100", color: "red.500" }}
+          leftIcon={<Icon as={IoMdLogOut} boxSize={5} />}
         >
-          Logout
+          <Text fontSize="sm" fontWeight="500">
+            Logout
+          </Text>
         </Button>
       )}
-    </div>
+    </VStack>
   );
 };
+
 export default MenuContent;

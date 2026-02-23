@@ -52,9 +52,9 @@ const ImagePicker: FC<ImagePickerProps> = ({
       <Button
         onClick={() => openFilePicker()}
         leftIcon={<MdOutlineAddPhotoAlternate />}
-        bg={"pink.100"}
+        bg={"brand.100"}
         _hover={{
-          bg: "primary.600",
+          bg: "brand.600",
         }}
       >
         {label}

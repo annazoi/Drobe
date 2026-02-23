@@ -1,7 +1,6 @@
 import {
   Box,
   Heading,
-  useColorModeValue,
   IconButton,
   useDisclosure,
   Drawer,
@@ -9,94 +8,107 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerBody,
-  Image,
+  Flex,
+  Icon,
+  HStack,
+  Spacer,
 } from "@chakra-ui/react";
-
-import logo from "../../assets/barbie.png";
 import { CiMenuBurger } from "react-icons/ci";
+import { PiCoatHangerLight } from "react-icons/pi";
 import MenuContent from "./MenuContent";
 
 const NavigationBar = (props: any) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+
   return (
-    <>
+    <Flex h="100vh" bg="neutral.50" overflow="hidden">
+      {/* Slim Top Bar for Mobile */}
       <Box
-        bg={useColorModeValue("pink.100", "gray.800")}
-        position={"fixed"}
-        zIndex={"1000"}
+        display={{ base: "flex", md: "none" }}
+        position="fixed"
         top={0}
         left={0}
-        w={"100%"}
-        h={"50px"}
-        boxShadow={"0 2px 5px 0px rgba(0,0,0,0.2)"}
-        display={"flex"}
+        right={0}
+        h="64px"
+        bg="white"
+        borderBottom="1px solid"
+        borderColor="neutral.200"
+        px={4}
+        alignItems="center"
+        zIndex={100}
       >
         <IconButton
-          bg={useColorModeValue("pink.200", "gray.800")}
-          display={{ base: "flex", md: "none" }}
+          variant="ghost"
           onClick={onOpen}
           aria-label="open menu"
-          icon={
-            <CiMenuBurger
-              size={20}
-              color={useColorModeValue("white", "gray")}
-            />
-          }
-          mt={1}
-          ml={1}
-        ></IconButton>
-        <Image
-          src={logo}
-          alt="logo"
-          boxSize="40px"
-          ml={5}
-          mt={1}
-          display={{ base: "none", md: "flex" }}
+          icon={<Icon as={CiMenuBurger} boxSize={6} />}
         />
-
-        <Heading
-          color={useColorModeValue("pink.300", "white")}
-          display={{ base: "none", md: "flex" }}
-          fontStyle={"Helvetica"}
-          textAlign={"start"}
-          mt={1}
-          ml={4}
-          fontWeight={"bold"}
-        >
-          E-Closet
-        </Heading>
+        <HStack ml={4} spacing={2}>
+          <Icon as={PiCoatHangerLight} boxSize={6} color="brand.500" />
+          <Heading size="md" letterSpacing="tight">
+            DROBE
+          </Heading>
+        </HStack>
       </Box>
+
+      {/* Desktop Side Rail */}
+      <Box
+        display={{ base: "none", md: "flex" }}
+        flexDirection="column"
+        w="280px"
+        h="full"
+        bg="white"
+        borderRight="1px solid"
+        borderColor="neutral.200"
+        py={8}
+        px={6}
+      >
+        <HStack mb={12} spacing={3} px={2}>
+          <Icon as={PiCoatHangerLight} boxSize={8} color="brand.500" />
+          <Heading size="lg" letterSpacing="0.1em" fontWeight="800">
+            DROBE
+          </Heading>
+        </HStack>
+        
+        <MenuContent />
+        
+        <Spacer />
+        
+        {/* Profile/Bottom section can go here */}
+        <Box px={2} py={4} borderTop="1px solid" borderColor="neutral.100">
+          <Heading size="xs" color="neutral.400" textTransform="uppercase" letterSpacing="widest">
+            v1.0.0
+          </Heading>
+        </Box>
+      </Box>
+
+      {/* Mobile Drawer */}
       <Drawer placement="left" onClose={onClose} isOpen={isOpen}>
         <DrawerOverlay />
-        <DrawerContent bg={useColorModeValue("pink.100", "gray.800")}>
-          <DrawerHeader borderBottomWidth="1px">Menu</DrawerHeader>
-          <DrawerBody>
+        <DrawerContent bg="white">
+          <DrawerHeader borderBottomWidth="1px" px={6} py={6}>
+            <HStack spacing={3}>
+              <Icon as={PiCoatHangerLight} boxSize={6} color="brand.500" />
+              <Heading size="md">DROBE</Heading>
+            </HStack>
+          </DrawerHeader>
+          <DrawerBody px={4} py={6}>
             <MenuContent />
           </DrawerBody>
         </DrawerContent>
       </Drawer>
+
+      {/* Main Content Area */}
       <Box
-        boxShadow={"0 2px 5px 2px rgba(0,0,0,0.2)"}
-        pos={"fixed"}
-        top={0}
-        left={0}
-        h={"full"}
-        w={{ base: "full", md: 60 }}
-        bg={useColorModeValue("pink.100", "gray.800")}
-        display={{
-          base: "none",
-          md: "block",
-        }}
+        flex="1"
+        overflowY="auto"
+        p={{ base: 4, md: 8 }}
+        pt={{ base: "80px", md: 8 }}
+        as="main"
       >
-        <div style={{ padding: "10px", marginTop: "60px" }}>
-          <MenuContent />
-        </div>
-      </Box>
-      {/*   <Box as="main" ml={{ base: 0, md: isLoggedIn ? 60 : 0 }} p="4"> */}
-      <Box as="main" ml={{ base: 0, md: 60 }} mt={8}>
         {props.children}
       </Box>
-    </>
+    </Flex>
   );
 };
 

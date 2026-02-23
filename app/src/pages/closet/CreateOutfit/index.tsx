@@ -1,10 +1,5 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useState } from "react";
 import {
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
   Box,
   Image,
   HStack,
@@ -12,10 +7,14 @@ import {
   ModalFooter,
   VStack,
   useToast,
-  Grid,
+  Text,
+  SimpleGrid,
   Textarea,
+  Flex,
+  Heading,
+  Icon,
+  IconButton,
 } from "@chakra-ui/react";
-import "./style.css";
 import { useMutation, useQuery } from "react-query";
 import { authStore } from "../../../store/authStore";
 import { CategorizedClothes, Clothe } from "../../../interfaces/clothe";
@@ -24,18 +23,11 @@ import Modal from "../../../components/ui/Modal";
 import { getClothes } from "../../../services/clothe";
 import { NewOutfit } from "../../../interfaces/outfit";
 import { createOutfit } from "../../../services/outfit";
-import Input from "../../../components/ui/Input";
-import { OptionItem } from "../../../interfaces/components";
-import Select from "../../../components/ui/Select";
-import { OUTFIT_TYPES } from "../../../constants/outfittypes";
 import { categorizeClothes } from "../../../utils/categorizeClothes";
 import Button from "../../../components/ui/Button";
-
-// {
-//  shirts:[{images:[],type:'',season:[]},{images:[],type:'',season:[]}],
-//   pants:[],
-//   shoes:[{},{}]
-// }
+import Select from "../../../components/ui/Select";
+import { OUTFIT_TYPES } from "../../../constants/outfittypes";
+import { IoCloseOutline } from "react-icons/io5";
 
 interface CreateOutfitProps {
   isOpen: any;
@@ -55,7 +47,6 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
   useQuery(
     "clothes",
     () => getClothes({ userId: userId }),
-
     {
       onSuccess: (data: Clothe[]) => {
         categorizeClothes({ data, setClothes });
@@ -69,30 +60,20 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
         createOutfit({ clothes, colorScheme, notes, type }),
     });
 
-  useEffect(() => {
-    // console.log("clothes", clothes);
-  }, [clothes]);
-
   const handleSelectedClothes = (clothe: Clothe) => {
-    const existingClothe = selectedClothes.find(
-      (item) => item.id === clothe.id
-    );
-    const existingType = selectedClothes.find(
-      (item) => item.type === clothe.type
-    );
-    if (existingClothe) {
-      setSelectedClothes(
-        selectedClothes.filter((item) => item.id !== clothe.id)
-      );
-      return;
+    const isSelected = selectedClothes.find((item) => item.id === clothe.id);
+    if (isSelected) {
+      setSelectedClothes(selectedClothes.filter((item) => item.id !== clothe.id));
+    } else {
+      setSelectedClothes([...selectedClothes, clothe]);
     }
-    if (existingType) {
-      return;
-    }
-    setSelectedClothes([...selectedClothes, clothe]);
   };
 
   const handleNewOutfit = () => {
+    if (selectedClothes.length === 0) {
+      toast({ title: "Please select at least one item", status: "warning", position: "top" });
+      return;
+    }
     CreateOutfitMutate(
       {
         clothes: selectedClothes.map((item) => item.id),
@@ -102,138 +83,177 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
       },
       {
         onSuccess: () => {
-          toast({
-            title: "Outfit created successfully",
-            status: "success",
-          });
+          toast({ title: "Outfit curated", status: "success", position: "top" });
           onClose();
-        },
-        onError: (error) => {
-          console.log(error);
         },
       }
     );
   };
 
-  const handleColorScheme = (e: any) => {
-    setColorScheme(e.target.value);
-  };
-
-  const handleNotes = (e: any) => {
-    setNotes(e.target.value);
-  };
-
-  const handleType = (e: any) => {
-    setType(e.target.value);
-  };
-
   return (
-    <>
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        title="Create an item from your closet"
-        maxW="100%"
-      >
-        <ModalBody pb={6}>
-          <HStack>
-            <Grid gap={8}>
-              <Accordion defaultIndex={[0]} allowMultiple w={"100%"} pb={6}>
-                {CLOTHE_TYPES.map((item: OptionItem, index: number) => (
-                  <AccordionItem key={index}>
-                    <AccordionButton>
-                      <Box as="span" flex="1" textAlign="left">
-                        {item.label}
-                      </Box>
-                      <AccordionIcon />
-                    </AccordionButton>
-                    <AccordionPanel pb={4}>
-                      <HStack spacing={"20px"}>
-                        {clothes &&
-                          clothes[item.value] &&
-                          clothes[item.value].map(
-                            (clothe: Clothe, index: number) => (
-                              <div key={index}>
-                                {clothe.images.map(
-                                  (image: any, index: number) => (
-                                    <Image
-                                      key={index}
-                                      boxSize="100%"
-                                      objectFit="cover"
-                                      src={image.file}
-                                      alt=""
-                                      onClick={() =>
-                                        handleSelectedClothes(clothe)
-                                      }
-                                      border={
-                                        selectedClothes.find(
-                                          (item: any) => item.id === clothe.id
-                                        )
-                                          ? "2px solid red"
-                                          : ""
-                                      }
-                                    />
-                                  )
-                                )}
-                              </div>
-                            )
-                          )}
-                      </HStack>
-                    </AccordionPanel>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-              <Select
-                onChange={handleType}
-                options={OUTFIT_TYPES}
-                placeholder="Select Type"
-              ></Select>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="OUTFIT CURATOR"
+      maxW="95vw"
+    >
+      <ModalBody p={0}>
+        <Flex h="75vh" overflow="hidden">
+          {/* LEFT: Item Library */}
+          <Box w="300px" borderRight="1px solid" borderColor="neutral.200" overflowY="auto" p={6}>
+            <Heading size="xs" textTransform="uppercase" letterSpacing="widest" mb={6} color="neutral.400">
+              Library
+            </Heading>
+            <VStack spacing={8} align="stretch">
+              {CLOTHE_TYPES.map((type, idx) => {
+                const typeItems = clothes ? clothes[type.value] : [];
+                if (!typeItems || typeItems.length === 0) return null;
+                return (
+                  <VStack key={idx} align="stretch" spacing={3}>
+                    <Text fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="widest">
+                      {type.label}
+                    </Text>
+                    <SimpleGrid columns={2} gap={2}>
+                      {typeItems.map((clothe: Clothe) => (
+                        <Box
+                          key={clothe.id}
+                          pos="relative"
+                          cursor="pointer"
+                          onClick={() => handleSelectedClothes(clothe)}
+                          transition="all 0.2s"
+                          _hover={{ opacity: 0.8 }}
+                        >
+                          <Image
+                            src={clothe.images[0].file}
+                            boxSize="100px"
+                            objectFit="cover"
+                            border="1px solid"
+                            borderColor={selectedClothes.find(i => i.id === clothe.id) ? "brand.500" : "neutral.100"}
+                            filter={selectedClothes.find(i => i.id === clothe.id) ? "none" : "grayscale(1)"}
+                          />
+                        </Box>
+                      ))}
+                    </SimpleGrid>
+                  </VStack>
+                );
+              })}
+            </VStack>
+          </Box>
 
-              <Input
-                label="Color Scheme"
-                placeholder="total black, colorfull..."
-                onChange={handleColorScheme}
-              />
-              <Textarea placeholder="Add notes..." onChange={handleNotes} />
-            </Grid>
+          {/* CENTER: Canvas */}
+          <Flex flex="1" bg="neutral.50" pos="relative" justify="center" align="center" direction="column">
+             <HStack pos="absolute" top={6} left={6} spacing={2}>
+                 <Icon as={IoCloseOutline} cursor="pointer" onClick={() => setSelectedClothes([])} />
+                 <Text fontSize="xs" fontWeight="600" color="neutral.400" textTransform="uppercase" letterSpacing="widest">
+                   Clear Canvas
+                 </Text>
+             </HStack>
 
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-              }}
+            <Box 
+              w="90%" 
+              h="90%" 
+              bg="white" 
+              boxShadow="0 10px 30px rgba(0,0,0,0.05)" 
+              pos="relative"
+              overflow="hidden"
+              display="flex"
+              flexWrap="wrap"
+              justifyContent="center"
+              alignContent="center"
+              gap={4}
+              p={8}
             >
-              {selectedClothes && (
-                <VStack>
-                  {selectedClothes.map((clothe: any, index: number) => (
+              {selectedClothes.length === 0 ? (
+                <Text color="neutral.300" textTransform="uppercase" letterSpacing="0.2em" fontWeight="300">
+                  Select items to curate
+                </Text>
+              ) : (
+                selectedClothes.map((clothe) => (
+                  <Box 
+                    key={clothe.id} 
+                    w="150px" 
+                    h="200px" 
+                    pos="relative"
+                    transition="transform 0.3s ease"
+                    _hover={{ transform: "scale(1.05)", zIndex: 10 }}
+                  >
                     <Image
-                      key={index}
-                      boxSize="100px"
-                      objectFit="cover"
                       src={clothe.images[0].file}
-                      alt=""
+                      w="100%"
+                      h="100%"
+                      objectFit="contain"
                     />
-                  ))}
-                </VStack>
+                    <IconButton 
+                      pos="absolute" 
+                      top={-2} 
+                      right={-2} 
+                      size="xs" 
+                      rounded="full"
+                      bg="white"
+                      boxShadow="sm"
+                      icon={<IoCloseOutline />}
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        handleSelectedClothes(clothe);
+                      }}
+                      aria-label="Remove"
+                    />
+                  </Box>
+                ))
               )}
+            </Box>
+          </Flex>
 
-              {/* <Canvas image={} /> */}
-            </div>
-          </HStack>
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            text="Save"
+          {/* RIGHT: Curate Panel */}
+          <Box w="350px" borderLeft="1px solid" borderColor="neutral.200" p={8} overflowY="auto">
+            <Heading size="xs" textTransform="uppercase" letterSpacing="widest" mb={8} color="neutral.400">
+              Curation
+            </Heading>
+            <VStack spacing={6} align="stretch">
+              <Select
+                onChange={(e: any) => setType(e.target.value)}
+                options={OUTFIT_TYPES}
+                placeholder="OCCASION"
+              />
+              <Box>
+                <Text fontSize="xs" fontWeight="700" mb={2} textTransform="uppercase" letterSpacing="widest">Color Palette</Text>
+                <Textarea 
+                  placeholder="E.g., Monochrome charcoal, Gold accents..."
+                  onChange={(e) => setColorScheme(e.target.value)}
+                  borderRadius="0"
+                  borderColor="neutral.100"
+                  size="sm"
+                />
+              </Box>
+              <Box>
+                <Text fontSize="xs" fontWeight="700" mb={2} textTransform="uppercase" letterSpacing="widest">Styling Notes</Text>
+                <Textarea 
+                  placeholder="Add editorial notes..."
+                  onChange={(e) => setNotes(e.target.value)}
+                  borderRadius="0"
+                  borderColor="neutral.100"
+                  h="120px"
+                  size="sm"
+                />
+              </Box>
+            </VStack>
+          </Box>
+        </Flex>
+      </ModalBody>
+      
+      <ModalFooter borderTop="1px solid" borderColor="neutral.100" p={6}>
+        <HStack w="100%" spacing={6} justify="flex-end">
+          <Button text="CANCEL" variant="ghost" onClick={onClose} />
+          <Button 
+            text="FINALIZE OUTFIT" 
+            onClick={handleNewOutfit} 
             isLoading={CreateOutfitIsLoading}
-            loadingText="Saving"
-            marginRight={3}
-            onClick={handleNewOutfit}
+            isDisabled={selectedClothes.length === 0}
           />
-
-          <Button text="Close" secondary={true} onClick={onClose} />
-        </ModalFooter>
-      </Modal>
-    </>
+        </HStack>
+      </ModalFooter>
+    </Modal>
   );
 };
+
 export default CreateOutfit;

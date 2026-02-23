@@ -8,7 +8,7 @@ const About: FC = () => {
     <div>
       <Button
         onClick={() => navigate("/login")}
-        bg={useColorModeValue("pink.300", "black")}
+        bg={useColorModeValue("brand.500", "black")}
         w={"100%"}
       >
         Return to Login

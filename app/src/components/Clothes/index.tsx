@@ -3,13 +3,12 @@ import { authStore } from "../../store/authStore";
 import { useQuery } from "react-query";
 import { getClothes } from "../../services/clothe";
 import {
-  Card,
-  ChakraProvider,
-  Container,
   Heading,
-  useColorModeValue,
+  SimpleGrid,
+  VStack,
+  Box,
+  Text,
 } from "@chakra-ui/react";
-import ChakraCarousel from "../ui/ChakraCarousel";
 import { CategorizedClothes, Clothe } from "../../interfaces/clothe";
 import ClotheCard from "../ui/ClotheCard";
 import { CLOTHE_TYPES } from "../../constants/clotheTypes";
@@ -29,51 +28,43 @@ const Clothes: FC = () => {
   });
 
   return (
-    <>
-      <Heading
-        size="l"
-        textAlign="start"
-        // mt={10}
-        color={useColorModeValue("pink.200", "gray.200")}
-      >
-        My Closet
-      </Heading>
+    <VStack spacing={16} align="stretch">
       {CLOTHE_TYPES.map((item: OptionItem, index: number) => (
-        <>
+        <Box key={index}>
           {clothes && clothes[item.value] && clothes[item.value].length > 0 && (
-            <Card key={index}>
+            <>
               <Heading
-                size="xl"
-                textAlign="start"
-                // mt={10}
-                color={useColorModeValue("pink.200", "gray.200")}
+                size="sm"
+                textTransform="uppercase"
+                letterSpacing="widest"
+                mb={8}
+                color="neutral.300"
+                borderBottom="1px solid"
+                borderColor="neutral.100"
+                pb={4}
               >
                 {item.label}
               </Heading>
-              <ChakraProvider>
-                <Container
-                  //   py={8}
-                  px={0}
-                  maxW={{
-                    base: "20rem",
-                    md: "43.75rem",
-                  }}
-                  minW={{ base: "100%", md: "100%" }}
-                >
-                  <ChakraCarousel gap={32}>
-                    {clothes[item.value].map(
-                      (clothe: Clothe, index: number) => (
-                        <ClotheCard key={index} clothe={clothe} />
-                      )
-                    )}
-                  </ChakraCarousel>
-                </Container>
-              </ChakraProvider>
-            </Card>
+              
+              <SimpleGrid 
+                columns={{ base: 2, md: 3, lg: 4, xl: 5 }} 
+                spacing={8}
+              >
+                {clothes[item.value].map((clothe: Clothe, idx: number) => (
+                  <ClotheCard key={idx} clothe={clothe} />
+                ))}
+              </SimpleGrid>
+            </>
           )}
-        </>
+        </Box>
       ))}
-    </>
+      
+      {!clothes && (
+        <Text color="neutral.300" letterSpacing="widest" textAlign="center" py={20}>
+          CURATING YOUR COLLECTION...
+        </Text>
+      )}
+    </VStack>
   );
 };
 

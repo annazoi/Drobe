@@ -1,64 +1,83 @@
 import { FC } from "react";
-import { Grid, useColorModeValue, Button, Text, Box } from "@chakra-ui/react";
+import { 
+  Box, 
+  Image, 
+  Text, 
+  VStack, 
+  Fade, 
+  useDisclosure, 
+  Flex,
+  Icon,
+  AspectRatio
+} from "@chakra-ui/react";
 import { capsFirst } from "../../../utils";
-import { ClotheImage } from "../../../interfaces/clothe";
-import Carousel from "../Carousel";
+import { IoInformationOutline } from "react-icons/io5";
+
 interface ClotheCardProps {
   clothe: any;
 }
+
 const ClotheCard: FC<ClotheCardProps> = ({ clothe }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   return (
-    <Grid
-      boxShadow="rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px"
-      gap={8}
-      //   flexDirection={{ base: "column", md: "row" }}
+    <Box
+      pos="relative"
+      role="group"
+      onMouseEnter={onOpen}
+      onMouseLeave={onClose}
       overflow="hidden"
-      color="gray.300"
-      bg="base.d100"
-      rounded={5}
-      w={"100%"}
+      cursor="pointer"
+      bg="neutral.100"
+      transition="all 0.4s ease"
     >
-      <Carousel
-        images={clothe.images.map((image: ClotheImage) => image.file)}
-      ></Carousel>
+      <AspectRatio ratio={3 / 4}>
+        <Image
+          src={clothe.images[0]?.file || "https://via.placeholder.com/600x800"}
+          alt={clothe.notes}
+          objectFit="cover"
+          transition="transform 0.6s ease"
+          _groupHover={{ transform: "scale(1.05)" }}
+        />
+      </AspectRatio>
 
-      <Grid gap={4} p={2}>
-        <Box
-          bg={useColorModeValue("pink.100", "gray.100")}
-          p={2}
-          borderRadius={5}
-          // w={"100%"}
+      {/* Hover Overlay */}
+      <Fade in={isOpen}>
+        <Flex
+          pos="absolute"
+          inset={0}
+          bg="rgba(0,0,0,0.4)"
+          backdropFilter="blur(4px)"
+          p={6}
+          direction="column"
+          justify="flex-end"
+          color="white"
         >
-          <Text
-            color={useColorModeValue("black", "white")}
-            fontSize={12}
-            textAlign={"left"}
-          >
-            Notes: {capsFirst(clothe.notes)}
-          </Text>
-          <Text
-            fontSize={12}
-            color={useColorModeValue("black", "white")}
-            textAlign={"left"}
-          >
-            {/* {capsFirst(outfit.notes)} */}
-          </Text>
-        </Box>
-
-        <Button
-          bg={useColorModeValue("pink.200", "black")}
-          fontWeight="bold"
-          color="gray.900"
-          size="sm"
-          w={{
-            base: "100%",
-            // md: "100%",
-          }}
-        >
-          More
-        </Button>
-      </Grid>
-    </Grid>
+          <VStack align="flex-start" spacing={1}>
+            <Text 
+              fontSize="xs" 
+              fontWeight="700" 
+              letterSpacing="widest" 
+              textTransform="uppercase"
+              color="brand.100"
+            >
+              {clothe.type || "Essential"}
+            </Text>
+            <Text fontSize="sm" noOfLines={2} fontWeight="300" fontStyle="italic">
+              {clothe.notes ? `"${capsFirst(clothe.notes)}"` : "No styling notes."}
+            </Text>
+          </VStack>
+          
+          <Flex mt={4} align="center" gap={2}>
+            <Icon as={IoInformationOutline} boxSize={4} />
+            <Text fontSize="xs" fontWeight="600" letterSpacing="widest" textTransform="uppercase">
+              View Details
+            </Text>
+          </Flex>
+        </Flex>
+      </Fade>
+    </Box>
   );
 };
+
 export default ClotheCard;

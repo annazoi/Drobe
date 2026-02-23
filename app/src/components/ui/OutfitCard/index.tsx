@@ -62,7 +62,7 @@ const OutfitCard: FC<OutfitCardProps> = ({ outfit }) => {
             <Text w={"100%"}>Rating: {outfit.rating}</Text>
             <MdOutlineStarRate
               style={{ marginBottom: "3px", marginLeft: "2px" }}
-              color="pink"
+              color="var(--chakra-colors-brand-500)"
               size={16}
             />
           </Tag>
@@ -97,7 +97,7 @@ const OutfitCard: FC<OutfitCardProps> = ({ outfit }) => {
         <Grid gap={2}>
           {outfit.notes && (
             <Box
-              bg={useColorModeValue("pink.100", "gray.100")}
+              bg={useColorModeValue("brand.100", "neutral.100")}
               p={2}
               borderRadius={5}
               // w={"100%"}
@@ -123,7 +123,7 @@ const OutfitCard: FC<OutfitCardProps> = ({ outfit }) => {
         </Grid>
         <Button
           // onClick={() => alert(`Post ${post.id - 5} clicked`)}
-          bg={useColorModeValue("pink.200", "black")}
+          bg={useColorModeValue("brand.500", "black")}
           fontWeight="bold"
           color="gray.900"
           size="sm"
