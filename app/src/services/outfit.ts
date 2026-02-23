@@ -1,4 +1,4 @@
-import { Outfit } from "./../interfaces/outfit";
+import { Outfit } from "../interfaces/outfit";
 import axios from "axios";
 import { API_URL } from "../constants/api";
 import { getHeaders } from "../utils/headers";
