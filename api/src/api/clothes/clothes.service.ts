@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateClotheDto } from './dto/create-clothe.dto';
 import { Clothe } from 'src/schemas/clothe.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -44,12 +44,9 @@ export class ClothesService {
       const clothes = await this.clotheModel
         .find({ ...query })
         .populate('userId', '-password');
-      if (!clothes || clothes.length === 0) {
-        throw new ForbiddenException('No clothes found');
-      }
-      return clothes;
+      return clothes || [];
     } catch (error) {
-      throw new ForbiddenException(error.message);
+      return [];
     }
   }
 
@@ -59,11 +56,12 @@ export class ClothesService {
         .findById(id)
         .populate('userId', '-password');
       if (!clothe) {
-        throw new ForbiddenException('No clothe found');
+        throw new NotFoundException('No clothe found');
       }
       return clothe;
     } catch (error) {
-      throw new ForbiddenException(error.message);
+      if (error instanceof NotFoundException) throw error;
+      throw new NotFoundException(error.message);
     }
   }
 }

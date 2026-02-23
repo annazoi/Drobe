@@ -6,10 +6,22 @@ import { formatClothe } from "./formatter/clothe";
 
 export const createClothe = async (payload: NewClothe) => {
   try {
+    const formData = new FormData();
+    payload.images.forEach((image) => {
+      formData.append("images", image);
+    });
+    formData.append("type", payload.type);
+    payload.season.forEach((s) => {
+      formData.append("season", s);
+    });
+    if (payload.notes) {
+      formData.append("notes", payload.notes);
+    }
+
     const response = await axios.post(
       `${API_URL}/clothes`,
-      payload,
-      getHeaders()
+      formData,
+      getAuthHeaders()
     );
     return response.data;
   } catch (error: any) {

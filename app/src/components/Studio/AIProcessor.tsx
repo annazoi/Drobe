@@ -12,7 +12,7 @@ import {
 import { FC, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PiSelectionAllThin, PiShapesThin } from "react-icons/pi";
-import removeBackground, { Config } from "@imgly/background-removal";
+import { removeBackground, Config } from "@imgly/background-removal";
 
 interface AIProcessorProps {
   originalImage: string;
@@ -34,13 +34,14 @@ const AIProcessor: FC<AIProcessorProps> = ({ originalImage, onProcessed }) => {
     const processImage = async () => {
       try {
         const config: Config = {
-          progress: (key: any, current: any, total: any) => {
+          progress: (_key: string, current: number, total: number) => {
             if (active) {
               const perc = Math.round((current / total) * 100);
-              setProgress(perc);
+              setProgress((prev) => (prev !== perc ? perc : prev));
             }
           },
-          publicPath: "/node_modules/@imgly/background-removal/dist/"
+          model: "isnet_quint8",
+          proxyToWorker: true
         };
 
         const blob = await removeBackground(originalImage, config);

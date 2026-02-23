@@ -228,7 +228,7 @@ const CreateItem: FC<CreateItemProps> = ({ isOpen, onClose }) => {
             />
           ) : (
             <Button
-              text="SAVE TO CLOSET"
+              text="SAVE TO ARCHIVE"
               width="100%"
               isLoading={createClotheIsLoading}
               onClick={handleSave}
