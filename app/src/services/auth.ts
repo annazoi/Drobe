@@ -5,9 +5,11 @@ import { decodeToken } from "../utils/token";
 
 export const signUp = async (payload: SignUp) => {
   try {
+    const isMultipart = payload.avatar instanceof File || payload.avatar instanceof Blob;
+    
     const response = await axios.post(`${API_URL}/auth/signup`, payload, {
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": isMultipart ? "multipart/form-data" : "application/json",
       },
     });
 
@@ -17,7 +19,6 @@ export const signUp = async (payload: SignUp) => {
       exp,
     };
     return data;
-    // return response.data;
   } catch (error: any) {
     throw error.response.data;
   }

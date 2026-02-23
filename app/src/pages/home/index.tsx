@@ -10,6 +10,7 @@ import {
   SimpleGrid,
   Flex,
   useDisclosure,
+  Skeleton,
 } from "@chakra-ui/react";
 import { FC, useState } from "react";
 import { getOutfits } from "../../services/outfit";
@@ -22,7 +23,7 @@ const Home: FC = () => {
   const [selectedOutfit, setSelectedOutfit] = useState<any>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  useQuery({
+  const { isLoading } = useQuery({
     queryKey: ["outfits"],
     queryFn: () => getOutfits(),
     onSuccess: (data) => {
@@ -69,7 +70,19 @@ const Home: FC = () => {
       {/* Magazine Feed */}
       <Box px={12} pb={20}>
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={12} alignItems="start">
-          {outfits.length > 0 ? (
+          {isLoading ? (
+            // Loading Skeletons
+            [...Array(6)].map((_, i) => (
+              <VStack key={i} spacing={4} align="stretch">
+                <HStack justify="space-between">
+                  <Skeleton h="10px" w="100px" />
+                  <Skeleton h="10px" w="40px" />
+                </HStack>
+                <Skeleton h="350px" w="100%" />
+                <Skeleton h="20px" w="100%" />
+              </VStack>
+            ))
+          ) : outfits.length > 0 ? (
             outfits.map((outfit, index) => (
               <VStack 
                 key={index} 
