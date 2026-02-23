@@ -1,5 +1,5 @@
 import { FaHome } from "react-icons/fa";
-import { BiCloset } from "react-icons/bi";
+// import { BiCloset } from "react-icons/bi";
 import { IoMdLogOut } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import { Button, VStack, Icon, Text } from "@chakra-ui/react";

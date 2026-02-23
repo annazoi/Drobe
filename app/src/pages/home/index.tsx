@@ -1,6 +1,5 @@
 import {
   Box,
-  Container,
   Heading,
   VStack,
   Image,
@@ -8,15 +7,20 @@ import {
   HStack,
   Icon,
   IconButton,
+  SimpleGrid,
   Flex,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { FC, useState } from "react";
 import { getOutfits } from "../../services/outfit";
 import { useQuery } from "react-query";
-import { IoHeartOutline, IoChatbubbleOutline, IoBookmarkOutline } from "react-icons/io5";
+import { IoHeartOutline, IoChatbubbleOutline } from "react-icons/io5";
+import Outfit from "../../components/Outfit";
 
 const Home: FC = () => {
   const [outfits, setOutfits] = useState<any[]>([]);
+  const [selectedOutfit, setSelectedOutfit] = useState<any>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useQuery({
     queryKey: ["outfits"],
@@ -26,10 +30,15 @@ const Home: FC = () => {
     },
   });
 
+  const handleOpenOutfit = (outfit: any) => {
+    setSelectedOutfit(outfit);
+    onOpen();
+  };
+
   return (
-    <Box bg="neutral.50" minH="100vh">
+    <Box bg="neutral.50" minH="100vh" pt={{ base: "64px", md: 0 }}>
       {/* Editorial Hero */}
-      <Box pos="relative" h="70vh" overflow="hidden" mb={16}>
+      <Box pos="relative" h="50vh" overflow="hidden" mb={8}>
         <Image
           src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop"
           alt="Fashion Hero"
@@ -58,78 +67,144 @@ const Home: FC = () => {
       </Box>
 
       {/* Magazine Feed */}
-      <Container maxW="container.md" py={12}>
-        <VStack spacing={24} align="stretch">
+      <Box px={12} pb={20}>
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={12} alignItems="start">
           {outfits.length > 0 ? (
             outfits.map((outfit, index) => (
-              <VStack key={index} spacing={6} align="stretch" pos="relative">
-                {/* Minimal Header */}
-                <HStack justify="space-between" px={2}>
-                  <VStack align="flex-start" spacing={0}>
-                    <Text fontSize="xs" fontWeight="700" letterSpacing="widest" textTransform="uppercase">
-                      {outfit.type || "Daily Look"}
-                    </Text>
-                    <Text fontSize="sm" color="neutral.400">
-                      Curated by @User
-                    </Text>
-                  </VStack>
-                  <Text fontSize="xs" color="neutral.300">
-                    FEATURED
+              <VStack 
+                key={index} 
+                spacing={4} 
+                align="stretch" 
+                pos="relative"
+                role="group"
+              >
+                {/* Refined Minimal Header */}
+                <HStack justify="space-between" px={1}>
+                  <Text fontSize="10px" fontWeight="900" letterSpacing="widest" color="neutral.900">
+                    @{outfit.userId.username.toUpperCase()}
+                  </Text>
+                  <Text fontSize="10px" color="neutral.300" fontWeight="700" letterSpacing="widest">
+                    #{outfit.id?.slice(-4).toUpperCase() || "00"}
                   </Text>
                 </HStack>
 
-                {/* Main Visual - 90% */}
+                {/* Moodboard Grid Visual */}
                 <Box 
-                  boxShadow="2xl" 
+                  boxShadow="sm" 
                   overflow="hidden" 
-                  transition="transform 0.5s ease"
-                  _hover={{ transform: "scale(1.02)" }}
+                  transition="all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1)"
+                  _hover={{ transform: "translateY(-4px)", boxShadow: "2xl", borderColor: "brand.200" }}
+                  bg="white"
+                  p={3}
+                  border="1px solid"
+                  borderColor="neutral.100"
+                  cursor="pointer"
+                  onClick={() => handleOpenOutfit(outfit)}
+                  pos="relative"
                 >
-                  <Image
-                    src={outfit.clothes[0]?.clothe?.images[0]?.file || "https://via.placeholder.com/800x1200"}
-                    alt="Outfit Image"
-                    w="100%"
-                    h="auto"
-                    minH="600px"
-                    objectFit="cover"
-                  />
+                  <SimpleGrid columns={3} spacing={2}>
+                    {outfit.clothes.map((clothe: any, cIdx: number) => (
+                      <Box 
+                        key={cIdx} 
+                        bg="neutral.50" 
+                        aspectRatio={1}
+                        overflow="hidden"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                      >
+                        <Image
+                          src={clothe.clothe.images[0].file}
+                          alt=""
+                          maxH="100%"
+                          objectFit="contain"
+                          transition="all 0.5s"
+                          _groupHover={{ transform: "scale(1.1)" }}
+                        />
+                      </Box>
+                    ))}
+                    {/* Placeholder boxes to maintain 3x2 grid if items are few */}
+                    {[...Array(Math.max(0, 6 - outfit.clothes.length))].map((_, i) => (
+                      <Box key={`empty-${i}`} bg="neutral.50" aspectRatio={1} opacity={0.3} />
+                    ))}
+                  </SimpleGrid>
+
+                  {/* Enhanced Hover Overlay */}
+                  <Box
+                    pos="absolute"
+                    inset={0}
+                    bg="rgba(0,0,0,0.05)"
+                    backdropFilter="blur(0px)"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    opacity={0}
+                    transition="all 0.3s"
+                    _groupHover={{ opacity: 1, backdropFilter: "blur(2px)" }}
+                  >
+                    <Box
+                      bg="neutral.900"
+                      color="white"
+                      px={6}
+                      py={2}
+                      fontSize="9px"
+                      fontWeight="900"
+                      letterSpacing="0.3em"
+                      transform="translateY(20px)"
+                      transition="all 0.4s"
+                      _groupHover={{ transform: "translateY(0)" }}
+                    >
+                      VIEW SERIES
+                    </Box>
+                  </Box>
                 </Box>
 
-                {/* Interaction - 10% */}
-                <HStack justify="space-between" px={4} py={2}>
-                  <HStack spacing={6}>
-                    <IconButton
-                      variant="ghost"
-                      icon={<Icon as={IoHeartOutline} boxSize={6} />}
-                      aria-label="Like"
-                    />
-                    <IconButton
-                      variant="ghost"
-                      icon={<Icon as={IoChatbubbleOutline} boxSize={6} />}
-                      aria-label="Comment"
-                    />
-                  </HStack>
-                  <IconButton
-                    variant="ghost"
-                    icon={<Icon as={IoBookmarkOutline} boxSize={6} />}
-                    aria-label="Save"
-                  />
-                </HStack>
-                
-                <Box px={4}>
-                    <Text fontSize="md" fontStyle="italic" color="neutral.600">
-                        "{outfit.notes || "No styling notes provided."}"
+                {/* Interaction & Details */}
+                <VStack align="stretch" spacing={2} px={1}>
+                  <HStack justify="space-between">
+                    <HStack spacing={3}>
+                      <IconButton
+                        variant="ghost"
+                        size="xs"
+                        icon={<Icon as={IoHeartOutline} boxSize={4} />}
+                        aria-label="Like"
+                        _hover={{ color: "brand.500", bg: "transparent" }}
+                      />
+                      <IconButton
+                        variant="ghost"
+                        size="xs"
+                        icon={<Icon as={IoChatbubbleOutline} boxSize={4} />}
+                        aria-label="Comment"
+                        _hover={{ color: "brand.500", bg: "transparent" }}
+                      />
+                    </HStack>
+                    <Text fontSize="9px" fontWeight="900" letterSpacing="0.1em" color="brand.500" textTransform="uppercase">
+                        {outfit.type || "EDITORIAL"}
                     </Text>
-                </Box>
+                  </HStack>
+                  
+                  {outfit.notes && (
+                    <Text fontSize="10px" fontWeight="400" color="neutral.500" noOfLines={1} lineHeight="1.6">
+                      {outfit.notes}
+                    </Text>
+                  )}
+                </VStack>
               </VStack>
             ))
           ) : (
-            <VStack py={20}>
-                <Text color="neutral.300" letterSpacing="widest">EXPLORE THE FUTURE OF FASHION</Text>
+            <VStack py={20} gridColumn="span 3">
+                <Text color="neutral.300" letterSpacing="widest" fontSize="xs">EXPLORE THE FUTURE OF FASHION</Text>
             </VStack>
           )}
-        </VStack>
-      </Container>
+        </SimpleGrid>
+      </Box>
+
+      {/* Detailed Modal */}
+      <Outfit 
+        isOpen={isOpen} 
+        onClose={onClose} 
+        outfit={selectedOutfit} 
+      />
     </Box>
   );
 };

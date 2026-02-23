@@ -21,8 +21,9 @@ const NavigationBar = (props: any) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <Flex h="100vh" bg="neutral.50" overflow="hidden">
+    <Flex minH="100vh" bg="neutral.50">
       {/* Slim Top Bar for Mobile */}
+      {/* ... (Mobile Top Bar code remains same) ... */}
       <Box
         display={{ base: "flex", md: "none" }}
         position="fixed"
@@ -51,17 +52,20 @@ const NavigationBar = (props: any) => {
         </HStack>
       </Box>
 
-      {/* Desktop Side Rail */}
+      {/* Desktop Side Rail - Sticky */}
       <Box
         display={{ base: "none", md: "flex" }}
         flexDirection="column"
         w="280px"
-        h="full"
+        h="100vh"
+        position="sticky"
+        top={0}
         bg="white"
         borderRight="1px solid"
         borderColor="neutral.200"
         py={8}
         px={6}
+        zIndex={100}
       >
         <HStack mb={12} spacing={3} px={2}>
           <Icon as={PiCoatHangerLight} boxSize={8} color="brand.500" />
@@ -74,7 +78,7 @@ const NavigationBar = (props: any) => {
         
         <Spacer />
         
-        {/* Profile/Bottom section can go here */}
+        {/* Profile/Bottom section */}
         <Box px={2} py={4} borderTop="1px solid" borderColor="neutral.100">
           <Heading size="xs" color="neutral.400" textTransform="uppercase" letterSpacing="widest">
             v1.0.0
@@ -82,7 +86,7 @@ const NavigationBar = (props: any) => {
         </Box>
       </Box>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer (code remains same) */}
       <Drawer placement="left" onClose={onClose} isOpen={isOpen}>
         <DrawerOverlay />
         <DrawerContent bg="white">
@@ -98,13 +102,13 @@ const NavigationBar = (props: any) => {
         </DrawerContent>
       </Drawer>
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Full Width, Body Scroll */}
       <Box
         flex="1"
-        overflowY="auto"
-        p={{ base: 4, md: 8 }}
-        pt={{ base: "80px", md: 8 }}
+        p={0}
         as="main"
+        bg="neutral.50"
+        minW={0}
       >
         {props.children}
       </Box>

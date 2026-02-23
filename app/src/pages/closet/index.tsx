@@ -1,13 +1,11 @@
 import {
   Box,
   ButtonGroup,
-  Container,
   Heading,
   Text,
   useDisclosure,
   VStack,
   HStack,
-  Divider,
 } from "@chakra-ui/react";
 import { FC, useState } from "react";
 import { IoAddOutline } from "react-icons/io5";
@@ -33,8 +31,8 @@ const Archive: FC = () => {
   });
 
   return (
-    <Container maxW="container.xl" py={12}>
-      <VStack spacing={18} align="stretch">
+    <Box w="100%" py={6} px={12} pt={{ base: "80px", md: 6 }}>
+      <VStack spacing={12} align="stretch">
         {/* Editorial Header */}
         <HStack justify="space-between" align="center" wrap="wrap" gap={8}>
           <VStack align="flex-start" spacing={0}>
@@ -57,54 +55,61 @@ const Archive: FC = () => {
           </ButtonGroup>
         </HStack>
 
-        {/* Featured Outfits Section - Flat Grid */}
+        {/* Featured Outfits Section - Polish Slider */}
         {outfits.length > 0 && (
           <Box>
             <Heading
               size="xs"
               textTransform="uppercase"
-              letterSpacing="0.3em"
-              mb={10}
+              letterSpacing="0.4em"
+              mb={8}
               color="neutral.300"
-              textAlign="center"
+              fontWeight="900"
             >
-              Recent Series
+              RECENT SERIES
             </Heading>
-            <Box overflowX="auto" pb={8}>
-                <HStack spacing={8} align="flex-start">
-                    {outfits.slice(0, 4).map((outfit, index) => (
-                        <Box key={index} minW="350px">
+            <Box 
+              overflowX="auto" 
+              pb={4}
+              sx={{
+                '&::-webkit-scrollbar': { display: 'none' },
+                'scrollbar-width': 'none'
+              }}
+            >
+                <HStack spacing={6} align="flex-start">
+                    {outfits.slice(0, 6).map((outfit, index) => (
+                        <Box key={index} minW="380px" transition="all 0.3s" _hover={{ transform: "translateY(-4px)" }}>
                             <OutfitCard outfit={outfit} />
                         </Box>
                     ))}
+                    <Box minW="100px" /> 
                 </HStack>
             </Box>
-            <Divider mt={12} borderColor="neutral.100" />
           </Box>
         )}
 
         {/* Modular Clothes Grid */}
         <Box>
-          <HStack justify="space-between" mb={12} align="center">
+          <HStack justify="space-between" mb={8} align="center">
             <Heading
                 size="sm"
-                fontWeight="800"
+                fontWeight="900"
                 letterSpacing="widest"
                 textTransform="uppercase"
-            >
-              Inventory
+              >
+              INVENTORY
             </Heading>
             <HStack spacing={8}>
               {["All", "Tops", "Bottoms", "Shoes", "Accessories"].map((cat) => (
                 <Text 
                     key={cat}
-                    fontSize="xs" 
-                    fontWeight="700"
-                    letterSpacing="widest"
+                    fontSize="10px" 
+                    fontWeight="800"
+                    letterSpacing="0.2em"
                     textTransform="uppercase"
-                    color={cat === "All" ? "neutral.900" : "neutral.300"} 
+                    color={cat === "All" ? "brand.500" : "neutral.300"} 
                     cursor="pointer" 
-                    _hover={{ color: "brand.500" }}
+                    _hover={{ color: "brand.300" }}
                     transition="all 0.3s ease"
                 >
                     {cat}
@@ -119,7 +124,7 @@ const Archive: FC = () => {
         {/* Modals */}
         <CreateItem isOpen={isOpenitem} onClose={onCloseItem} />
       </VStack>
-    </Container>
+    </Box>
   );
 };
 
