@@ -102,6 +102,7 @@ const AIProcessor: FC<AIProcessorProps> = ({ originalImage, onProcessed }) => {
                   w="100%"
                   h="100%"
                   objectFit="contain"
+                  crossOrigin="anonymous"
                   filter="grayscale(0.5)"
                 />
               </MotionBox>
@@ -120,6 +121,7 @@ const AIProcessor: FC<AIProcessorProps> = ({ originalImage, onProcessed }) => {
                   w="100%" 
                   h="100%" 
                   objectFit="contain" 
+                  crossOrigin="anonymous"
                   opacity={stage === "refined" ? 1 : 0.3}
                 />
                 

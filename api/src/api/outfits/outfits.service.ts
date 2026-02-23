@@ -4,13 +4,11 @@ import { UpdateOutfitDto } from './dto/update-outfit.dto';
 import { Outfit } from 'src/schemas/outfit.schema';
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Model, Error } from 'mongoose';
-import { S3Service } from 'src/aws-s3/aws-s3.service';
 
 @Injectable()
 export class OutfitsService {
   constructor(
     @InjectModel(Outfit.name) private outfitModel: Model<Outfit>,
-    private s3Service: S3Service,
   ) {}
   async create(userId: string, createOutfitDto: CreateOutfitDto) {
     try {

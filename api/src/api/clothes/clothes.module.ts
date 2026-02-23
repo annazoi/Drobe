@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common';
 import { ClothesService } from './clothes.service';
 import { ClothesController } from './clothes.controller';
-import { Clothe, ClotheSchema } from 'src/schemas/clothe.schema';
+import { ClotheSchema } from 'src/schemas/clothe.schema';
 import { MongooseModule } from '@nestjs/mongoose';
-import { S3Service } from 'src/aws-s3/aws-s3.service';
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Clothe', schema: ClotheSchema }]),
+    CloudinaryModule,
   ],
   exports: [ClothesService],
   controllers: [ClothesController],
-  providers: [ClothesService, S3Service],
+  providers: [ClothesService],
 })
 export class ClothesModule {}

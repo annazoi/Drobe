@@ -38,6 +38,7 @@ const ClotheCard: FC<ClotheCardProps> = ({ clothe, onClick }) => {
           src={clothe.images[0]?.file || "https://via.placeholder.com/600x800"}
           alt={clothe.notes}
           objectFit="cover"
+          crossOrigin="anonymous"
           transition="transform 0.6s ease"
           _groupHover={{ transform: "scale(1.05)" }}
         />

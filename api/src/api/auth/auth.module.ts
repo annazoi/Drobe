@@ -5,14 +5,15 @@ import { JwtStrategy } from './strategy';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserSchema } from 'src/schemas/user.schema';
 import { CreateJwtServiceModule } from './jwt/jwt.module';
-import { S3Service } from 'src/aws-s3/aws-s3.service';
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
     CreateJwtServiceModule,
+    CloudinaryModule,
     MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, S3Service],
+  providers: [AuthService, JwtStrategy],
 })
 export class AuthModule {}

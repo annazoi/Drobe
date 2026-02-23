@@ -8,6 +8,7 @@ import { UserModule } from './api/users/users.module';
 import { AwsS3Module } from './aws-s3/aws-s3.module';
 import { OutfitsModule } from './api/outfits/outfits.module';
 import { ClothesModule } from './api/clothes/clothes.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -26,6 +27,7 @@ import { AppController } from './app.controller';
     AuthModule,
     UserModule,
     AwsS3Module,
+    CloudinaryModule,
     OutfitsModule,
     ClothesModule,
   ],

@@ -8,7 +8,7 @@ import * as argon from 'argon2';
 import { Model, Error } from 'mongoose';
 import { User } from 'src/schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { S3Service } from 'src/aws-s3/aws-s3.service';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { CreateJwtService } from './jwt/jwt.service';
 
 @Injectable()
@@ -16,7 +16,7 @@ export class AuthService {
   constructor(
     @InjectModel(User.name)
     private userModel: Model<User>,
-    private s3Service: S3Service,
+    private cloudinaryService: CloudinaryService,
     private jwt: CreateJwtService,
   ) {}
 
@@ -31,7 +31,7 @@ export class AuthService {
 
     let avatarUrl = undefined;
     if (file) {
-      avatarUrl = await this.s3Service.uploadFile(file);
+      avatarUrl = await this.cloudinaryService.uploadFile(file);
     }
 
     const hash = await argon.hash(dto.password);

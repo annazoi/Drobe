@@ -3,13 +3,13 @@ import { CreateClotheDto } from './dto/create-clothe.dto';
 import { Clothe } from 'src/schemas/clothe.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Error } from 'mongoose';
-import { S3Service } from 'src/aws-s3/aws-s3.service';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class ClothesService {
   constructor(
     @InjectModel(Clothe.name) private clotheModel: Model<Clothe>,
-    private s3Service: S3Service,
+    private cloudinaryService: CloudinaryService,
   ) {}
   async create(
     userId: string,
@@ -19,7 +19,7 @@ export class ClothesService {
     try {
       const images = [];
       for (let i = 0; i < files?.length; i++) {
-        const uploadedFileUrl = await this.s3Service.uploadFile(files[i]);
+        const uploadedFileUrl = await this.cloudinaryService.uploadFile(files[i]);
         images.push({
           file: uploadedFileUrl,
         });
