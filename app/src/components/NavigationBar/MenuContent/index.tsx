@@ -4,7 +4,6 @@ import { IoMdLogOut } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import { Button, VStack, Icon, Text } from "@chakra-ui/react";
 import { authStore } from "../../../store/authStore";
-import { GrContact } from "react-icons/gr";
 import { IoInformationCircleSharp } from "react-icons/io5";
 
 import { IoColorPaletteOutline, IoJournalOutline } from "react-icons/io5";
@@ -33,16 +32,10 @@ export const isLoggedInLinks: any = [
 const isLogOutLinks: any = [
   {
     id: 1,
-    name: "About Us",
+    name: "About",
     path: "/about",
     icon: IoInformationCircleSharp,
-  },
-  {
-    id: 2,
-    name: "Contact",
-    path: "/contact",
-    icon: GrContact,
-  },
+  }
 ];
 
 const MenuContent = () => {

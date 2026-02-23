@@ -9,9 +9,9 @@ type SelectProps = {
   label?: string;
 } & React.ComponentProps<typeof ChakraSelect>;
 
-const Select: FC<SelectProps> = ({ placeholder, onChange, options = [] }) => {
+const Select: FC<SelectProps> = ({ placeholder, onChange, options = [], ...rest }) => {
   return (
-    <ChakraSelect onChange={onChange} placeholder={placeholder}>
+    <ChakraSelect onChange={onChange} placeholder={placeholder} {...rest}>
       {options.map((option: OptionItem, index: number) => (
         <option key={index} value={option.value}>
           {option.label}

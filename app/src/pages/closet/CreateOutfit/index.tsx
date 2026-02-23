@@ -94,11 +94,12 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      isCentered
       title="OUTFIT CURATOR"
       maxW="95vw"
     >
-      <ModalBody p={0}>
-        <Flex h="75vh" overflow="hidden">
+      <ModalBody p={0} >
+        <Flex h="70vh" overflow="hidden" >
           {/* LEFT: Item Library */}
           <Box w="300px" borderRight="1px solid" borderColor="neutral.200" overflowY="auto" p={6}>
             <Heading size="xs" textTransform="uppercase" letterSpacing="widest" mb={6} color="neutral.400">

@@ -33,6 +33,7 @@ const Button: React.FC<ButtonProps> = ({
   marginRight,
   secondary,
   rightIcon,
+  ...rest
 }) => {
   return (
     <ChakraButton
@@ -54,6 +55,7 @@ const Button: React.FC<ButtonProps> = ({
       mb={marginBottom}
       mr={marginRight}
       rightIcon={rightIcon}
+      {...rest}
     >
       {text}
     </ChakraButton>

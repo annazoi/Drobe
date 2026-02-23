@@ -42,8 +42,8 @@ const Register: FC = () => {
   }
 
   return (
-    <Center minH="100vh" w="100%" bg="neutral.50" py={12}>
-      <VStack spacing={12} w="100%" maxW="450px" px={6}>
+    <Center w="100%" bg="neutral.50" py={12}>
+      <VStack spacing={12} w="100%" maxW="550px" px={6}>
         <VStack spacing={3} textAlign="center">
           <Heading size="3xl" fontWeight="900" letterSpacing="tight">
             DROBE

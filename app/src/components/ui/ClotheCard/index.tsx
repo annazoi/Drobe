@@ -15,9 +15,10 @@ import { IoInformationOutline } from "react-icons/io5";
 
 interface ClotheCardProps {
   clothe: any;
+  onClick?: () => void;
 }
 
-const ClotheCard: FC<ClotheCardProps> = ({ clothe }) => {
+const ClotheCard: FC<ClotheCardProps> = ({ clothe, onClick }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
@@ -30,6 +31,7 @@ const ClotheCard: FC<ClotheCardProps> = ({ clothe }) => {
       cursor="pointer"
       bg="neutral.100"
       transition="all 0.4s ease"
+      onClick={onClick}
     >
       <AspectRatio ratio={3 / 4}>
         <Image

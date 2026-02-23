@@ -20,6 +20,7 @@ import Button from "../../components/ui/Button";
 const Archive: FC = () => {
   const { userId } = authStore((state) => state);
   const [outfits, setOutfits] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const { isOpen: isOpenitem, onOpen: onOpenItem, onClose: onCloseItem } = useDisclosure();
 
   useQuery({
@@ -107,8 +108,9 @@ const Archive: FC = () => {
                     fontWeight="800"
                     letterSpacing="0.2em"
                     textTransform="uppercase"
-                    color={cat === "All" ? "brand.500" : "neutral.300"} 
+                    color={cat === selectedCategory ? "brand.500" : "neutral.300"} 
                     cursor="pointer" 
+                    onClick={() => setSelectedCategory(cat)}
                     _hover={{ color: "brand.300" }}
                     transition="all 0.3s ease"
                 >
@@ -118,7 +120,7 @@ const Archive: FC = () => {
             </HStack>
           </HStack>
           
-          <Clothes />
+          <Clothes category={selectedCategory} />
         </Box>
 
         {/* Modals */}
