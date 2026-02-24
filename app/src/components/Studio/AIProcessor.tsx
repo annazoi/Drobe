@@ -9,7 +9,7 @@ import {
   Tooltip,
   useToast,
 } from "@chakra-ui/react";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PiSelectionAllThin, PiShapesThin } from "react-icons/pi";
 import { removeBackground, Config } from "@imgly/background-removal";
@@ -17,16 +17,21 @@ import { removeBackground, Config } from "@imgly/background-removal";
 interface AIProcessorProps {
   originalImage: string;
   onProcessed: (processedImageBlob: Blob) => void;
+  activeTool: "restore" | "erase" | null;
 }
 
 const MotionBox = motion(Box);
 
-const AIProcessor: FC<AIProcessorProps> = ({ originalImage, onProcessed }) => {
+const AIProcessor: FC<AIProcessorProps> = ({ originalImage, onProcessed, activeTool }) => {
   const [stage, setStage] = useState<"processing" | "refined">("processing");
   const [progress, setProgress] = useState(0);
   const [processedUrl, setProcessedUrl] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"original" | "processed">("processed");
   const toast = useToast();
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const originalImgRef = useRef<HTMLImageElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -51,6 +56,23 @@ const AIProcessor: FC<AIProcessorProps> = ({ originalImage, onProcessed }) => {
           setProcessedUrl(url);
           setStage("refined");
           onProcessed(blob);
+          
+          // Load processed image onto canvas
+          const img = new window.Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => {
+            if (canvasRef.current) {
+              const canvas = canvasRef.current;
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext("2d");
+              if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+              }
+            }
+          };
+          img.src = url;
         }
       } catch (error) {
         if (active) {
@@ -74,6 +96,75 @@ const AIProcessor: FC<AIProcessorProps> = ({ originalImage, onProcessed }) => {
     };
   }, [originalImage]);
 
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!activeTool || stage !== "refined" || viewMode !== "processed") return;
+    setIsDrawing(true);
+    draw(e);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDrawing) return;
+    draw(e);
+  };
+
+  const handleMouseUp = () => {
+    if (isDrawing) {
+      setIsDrawing(false);
+      updateParent();
+    }
+  };
+
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !activeTool) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+    const x = (clientX - rect.left) * (canvas.width / rect.width);
+    const y = (clientY - rect.top) * (canvas.height / rect.height);
+
+    ctx.lineWidth = 30;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    if (activeTool === "erase") {
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    } else if (activeTool === "restore" && originalImgRef.current) {
+      ctx.globalCompositeOperation = "source-over";
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, 15, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(originalImgRef.current, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    }
+  };
+
+  const updateParent = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          onProcessed(blob);
+          // Optional: Update processedUrl to reflect canvas state for UI
+          const newUrl = URL.createObjectURL(blob);
+          setProcessedUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return newUrl;
+          });
+        }
+      }, "image/png");
+    }
+  };
+
   return (
     <VStack spacing={8} w="100%" align="stretch">
       <Box
@@ -85,6 +176,7 @@ const AIProcessor: FC<AIProcessorProps> = ({ originalImage, onProcessed }) => {
         overflow="hidden"
         border="1px solid"
         borderColor="neutral.100"
+        cursor={activeTool ? "crosshair" : "default"}
       >
         <Box position="absolute" inset={0} p={8} display="flex" alignItems="center" justifyContent="center">
           <AnimatePresence mode="wait">
@@ -98,6 +190,7 @@ const AIProcessor: FC<AIProcessorProps> = ({ originalImage, onProcessed }) => {
                 h="100%"
               >
                 <Image
+                  ref={originalImgRef}
                   src={originalImage}
                   w="100%"
                   h="100%"
@@ -115,14 +208,44 @@ const AIProcessor: FC<AIProcessorProps> = ({ originalImage, onProcessed }) => {
                 w="100%"
                 h="100%"
                 position="relative"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleMouseDown}
+                onTouchMove={handleMouseMove}
+                onTouchEnd={handleMouseUp}
               >
-                <Image 
-                  src={stage === "refined" && processedUrl ? processedUrl : originalImage} 
-                  w="100%" 
-                  h="100%" 
-                  objectFit="contain" 
+                {/* Visual placeholder while processing */}
+                {stage === "processing" && (
+                  <Image 
+                    src={originalImage} 
+                    w="100%" 
+                    h="100%" 
+                    objectFit="contain" 
+                    crossOrigin="anonymous"
+                    opacity={0.3}
+                  />
+                )}
+                
+                {/* Canvas for manual editing */}
+                <canvas
+                  ref={canvasRef}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    display: stage === "refined" ? "block" : "none",
+                  }}
+                />
+
+                {/* Keep original hidden but loaded for restoration */}
+                <img
+                  ref={originalImgRef}
+                  src={originalImage}
                   crossOrigin="anonymous"
-                  opacity={stage === "refined" ? 1 : 0.3}
+                  style={{ display: "none" }}
+                  alt=""
                 />
                 
                 {stage === "processing" && (
@@ -173,10 +296,16 @@ const AIProcessor: FC<AIProcessorProps> = ({ originalImage, onProcessed }) => {
           >
             {stage === "processing"
               ? "AI Deconstruction..."
-              : "Curation Ready"}
+              : activeTool 
+                ? `${activeTool.toUpperCase()} MODE ACTIVE`
+                : "Curation Ready"}
           </Text>
           <Text fontSize="10px" color="neutral.400" fontWeight="600">
-            {stage === "refined" ? "Background removed successfully" : "Analyzing geometry and texture"}
+            {stage === "refined" 
+              ? activeTool 
+                ? "Paint manually to refine details" 
+                : "Background removed successfully" 
+              : "Analyzing geometry and texture"}
           </Text>
         </VStack>
 

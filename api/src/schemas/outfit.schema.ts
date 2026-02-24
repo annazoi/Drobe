@@ -22,6 +22,9 @@ export class Outfit {
   clothes: OutfitClothe[];
 
   @Prop()
+  image: string;
+
+  @Prop()
   colorScheme?: string;
 
   @Prop()

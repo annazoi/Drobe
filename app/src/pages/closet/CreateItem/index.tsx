@@ -160,6 +160,7 @@ const CreateItem: FC<CreateItemProps> = ({ isOpen, onClose }) => {
                     <AIProcessor 
                       originalImage={rawImage} 
                       onProcessed={handleProcessed} 
+                      activeTool={activeTool}
                     />
                     {processedImage && (
                       <StudioToolbar 
