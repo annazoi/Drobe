@@ -33,10 +33,17 @@ export class OutfitsController {
   async create(
     @Req() req: Express.Request,
     @Body() createOutfitDto: CreateOutfitDto,
+    @UploadedFiles() files?: Express.Multer.File[],
   ) {
     const { userId } = req.user;
+    
+    console.log("FILES RECEIVED:", files?.map(f => f.fieldname));
+    console.log("BODY RECEIVED:", createOutfitDto);
 
-    return this.outfitsService.create(userId, createOutfitDto);
+    // Express parses the AnyFilesInterceptor(). The file we named "imageFile" on the frontend will be here
+    const imageFile = files?.length ? files[0] : undefined;
+
+    return this.outfitsService.create(userId, createOutfitDto, imageFile);
   }
 
   @Get()

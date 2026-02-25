@@ -4,20 +4,30 @@ import { UpdateOutfitDto } from './dto/update-outfit.dto';
 import { Outfit } from 'src/schemas/outfit.schema';
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Model, Error } from 'mongoose';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class OutfitsService {
   constructor(
     @InjectModel(Outfit.name) private outfitModel: Model<Outfit>,
+    private cloudinaryService: CloudinaryService,
   ) {}
-  async create(userId: string, createOutfitDto: CreateOutfitDto) {
+  async create(userId: string, createOutfitDto: CreateOutfitDto, imageFile?: Express.Multer.File) {
     try {
       // const { clothes, colorScheme, rating, notes, type } = createOutfitDto;
       const clothesObj = createOutfitDto.clothes.map((clothe) => ({ clothe }));
+      let imageUrl = null;
+
+      if (imageFile) {
+        const uploadedUrl = await this.cloudinaryService.uploadFile(imageFile);
+        imageUrl = uploadedUrl;
+      }
+
       const outfit = new this.outfitModel({
         ...createOutfitDto,
         clothes: clothesObj,
         userId,
+        image: imageUrl,
       });
 
       await outfit.save();

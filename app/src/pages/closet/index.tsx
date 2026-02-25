@@ -74,7 +74,7 @@ const Archive: FC = () => {
               pb={4}
               sx={{
                 '&::-webkit-scrollbar': { display: 'none' },
-                'scrollbar-width': 'none'
+                scrollbarWidth: 'none'
               }}
             >
                 <HStack spacing={6} align="flex-start">

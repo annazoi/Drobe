@@ -30,6 +30,7 @@ import Select from "../../../components/ui/Select";
 import { OUTFIT_TYPES } from "../../../constants/outfittypes";
 import { IoCloseOutline, IoTrashOutline, IoArrowForwardOutline, IoArrowBackOutline } from "react-icons/io5";
 import { fabric } from "fabric";
+import { getCloudinaryUrl } from "../../../utils/cloudinary.utils";
 
 interface CreateOutfitProps {
   isOpen: any;
@@ -45,15 +46,20 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
   const [type, setType] = useState("");
 
   const toast = useToast();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
   const fabricCanvas = useRef<fabric.Canvas | null>(null);
   const [activeObject, setActiveObject] = useState<fabric.Object | null>(null);
   const [toolbarPos, setToolbarPos] = useState({ top: 0, left: 0 });
 
   // Initialize Fabric Canvas
   useEffect(() => {
-    if (isOpen && canvasRef.current && !fabricCanvas.current) {
-      fabricCanvas.current = new fabric.Canvas(canvasRef.current, {
+    if (isOpen && canvasContainerRef.current && !fabricCanvas.current) {
+      // Create a fresh canvas element to avoid React 18 Strict Mode double-mount issues
+      // This stops Fabric from breaking its own wrappers when React unmounts cleanly
+      const canvasEl = document.createElement("canvas");
+      canvasContainerRef.current.appendChild(canvasEl);
+
+      fabricCanvas.current = new fabric.Canvas(canvasEl, {
         width: 800,
         height: 600,
         backgroundColor: "#ffffff",
@@ -99,6 +105,10 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
         fabricCanvas.current.dispose();
         fabricCanvas.current = null;
       }
+      if (canvasContainerRef.current) {
+        // Destroy the Fabric-generated .canvas-container on unmount
+        canvasContainerRef.current.innerHTML = '';
+      }
     };
   }, [isOpen]);
 
@@ -113,7 +123,16 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
     selectedClothes.forEach((clothe) => {
       const exists = currentObjects.some((obj) => obj.clotheId === clothe.id);
       if (!exists) {
-        fabric.Image.fromURL(clothe.images[0].file, (img) => {
+        // Use the optimized Cloudinary URL and add a cache-buster
+        const optimizedUrl = getCloudinaryUrl(clothe.images[0].file, 400);
+        const imageUrl = new URL(optimizedUrl);
+        imageUrl.searchParams.append('t', Date.now().toString());
+
+        fabric.Image.fromURL(imageUrl.toString(), (img) => {
+          if (!img) {
+            console.error("Fabric failed to load image:", imageUrl.toString());
+            return;
+          }
           img.set({
             left: 100 + Math.random() * 200,
             top: 100 + Math.random() * 200,
@@ -165,20 +184,55 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
       return;
     }
 
-    CreateOutfitMutate(
-      {
-        clothes: selectedClothes.map((item) => item.id),
-        colorScheme: colorScheme,
-        notes: notes,
-        type: type,
-      },
-      {
-        onSuccess: () => {
-          toast({ title: "Outfit curated", status: "success", position: "top" });
-          onClose();
+    if (fabricCanvas.current) {
+      fabricCanvas.current.discardActiveObject();
+      fabricCanvas.current.requestRenderAll();
+      
+      const dataUrl = fabricCanvas.current.toDataURL({
+        format: 'png',
+        quality: 1,
+        multiplier: 2 // High resolution
+      });
+
+      // Convert dataUrl to File
+      fetch(dataUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], "outfit.png", { type: "image/png" });
+          
+          CreateOutfitMutate(
+            {
+              clothes: selectedClothes.map((item) => item.id),
+              colorScheme: colorScheme,
+              notes: notes,
+              type: type,
+              image: file,
+            },
+            {
+              onSuccess: () => {
+                toast({ title: "Outfit curated", status: "success", position: "top" });
+                onClose();
+              },
+            }
+          );
+        });
+    } else {
+      // Fallback if canvas is not ready
+      CreateOutfitMutate(
+        {
+          clothes: selectedClothes.map((item) => item.id),
+          colorScheme: colorScheme,
+          notes: notes,
+          type: type,
         },
-      }
-    );
+        {
+          onSuccess: () => {
+            toast({ title: "Outfit curated", status: "success", position: "top" });
+            onClose();
+          },
+        }
+      );
+    }
   };
 
   const handleClearCanvas = () => {
@@ -256,7 +310,7 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
                           _hover={{ opacity: 0.8 }}
                         >
                           <Image
-                            src={clothe.images[0].file}
+                            src={getCloudinaryUrl(clothe.images[0].file, 200)}
                             boxSize="100px"
                             objectFit="cover"
                             border="1px solid"
@@ -286,8 +340,10 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
               boxShadow="0 20px 50px rgba(0,0,0,0.1)" 
               pos="relative"
               overflow="hidden"
+              w="800px"
+              h="600px"
             >
-              <canvas ref={canvasRef} />
+              <div ref={canvasContainerRef} style={{ width: "100%", height: "100%" }} />
               
               {/* Floating Object Toolbar */}
               {activeObject && (

@@ -5,6 +5,7 @@ export interface NewOutfit {
   colorScheme?: string;
   rating?: number;
   notes?: string;
+  image?: File;
   type: string;
 }
 
