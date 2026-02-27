@@ -1,461 +1,477 @@
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from 'react';
 import {
-  Box,
-  Image,
-  HStack,
-  ModalBody,
-  ModalFooter,
-  VStack,
-  useToast,
-  Text,
-  SimpleGrid,
-  Textarea,
-  Flex,
-  Heading,
-  Icon,
-  IconButton,
-  Tooltip,
-} from "@chakra-ui/react";
-import { useMutation, useQuery } from "react-query";
-import { authStore } from "../../../store/authStore";
-import { CategorizedClothes, Clothe } from "../../../interfaces/clothe";
-import { CLOTHE_TYPES } from "../../../constants/clotheTypes";
-import Modal from "../../../components/ui/Modal";
-import { getClothes } from "../../../services/clothe";
-import { NewOutfit } from "../../../interfaces/outfit";
-import { createOutfit } from "../../../services/outfit";
-import { categorizeClothes } from "../../../utils/categorizeClothes";
-import Button from "../../../components/ui/Button";
-import Select from "../../../components/ui/Select";
-import { OUTFIT_TYPES } from "../../../constants/outfittypes";
-import { IoCloseOutline, IoTrashOutline, IoArrowForwardOutline, IoArrowBackOutline } from "react-icons/io5";
-import { fabric } from "fabric";
-import { getCloudinaryUrl } from "../../../utils/cloudinary.utils";
+	Box,
+	Image,
+	HStack,
+	ModalBody,
+	ModalFooter,
+	VStack,
+	useToast,
+	Text,
+	SimpleGrid,
+	Textarea,
+	Flex,
+	Heading,
+	Icon,
+	IconButton,
+	Tooltip,
+} from '@chakra-ui/react';
+import { useMutation, useQuery } from 'react-query';
+import { authStore } from '../../../store/authStore';
+import { CategorizedClothes, Clothe } from '../../../interfaces/clothe';
+import { CLOTHE_TYPES } from '../../../constants/clotheTypes';
+import Modal from '../../../components/ui/Modal';
+import { getClothes } from '../../../services/clothe';
+import { NewOutfit } from '../../../interfaces/outfit';
+import { createOutfit } from '../../../services/outfit';
+import { categorizeClothes } from '../../../utils/categorizeClothes';
+import Button from '../../../components/ui/Button';
+import Select from '../../../components/ui/Select';
+import { OUTFIT_TYPES } from '../../../constants/outfittypes';
+import { IoCloseOutline, IoTrashOutline, IoArrowForwardOutline, IoArrowBackOutline } from 'react-icons/io5';
+import { fabric } from 'fabric';
+import { getCloudinaryUrl } from '../../../utils/cloudinary.utils';
 
 interface CreateOutfitProps {
-  isOpen: any;
-  onClose: any;
+	isOpen: any;
+	onClose: any;
 }
 
 const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
-  const { userId } = authStore((state) => state);
-  const [clothes, setClothes] = useState<CategorizedClothes>();
-  const [selectedClothes, setSelectedClothes] = useState<Clothe[]>([]);
-  const [colorScheme, setColorScheme] = useState("");
-  const [notes, setNotes] = useState("");
-  const [type, setType] = useState("");
+	const { userId } = authStore((state) => state);
+	const [clothes, setClothes] = useState<CategorizedClothes>();
+	const [selectedClothes, setSelectedClothes] = useState<Clothe[]>([]);
+	const [colorScheme, setColorScheme] = useState('');
+	const [notes, setNotes] = useState('');
+	const [type, setType] = useState('');
 
-  const toast = useToast();
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
-  const fabricCanvas = useRef<fabric.Canvas | null>(null);
-  const [activeObject, setActiveObject] = useState<fabric.Object | null>(null);
-  const [toolbarPos, setToolbarPos] = useState({ top: 0, left: 0 });
+	const toast = useToast();
+	const canvasContainerRef = useRef<HTMLDivElement>(null);
+	const fabricCanvas = useRef<fabric.Canvas | null>(null);
+	const [activeObject, setActiveObject] = useState<fabric.Object | null>(null);
+	const [toolbarPos, setToolbarPos] = useState({ top: 0, left: 0 });
 
-  // Initialize Fabric Canvas
-  useEffect(() => {
-    if (isOpen && canvasContainerRef.current && !fabricCanvas.current) {
-      // Create a fresh canvas element to avoid React 18 Strict Mode double-mount issues
-      // This stops Fabric from breaking its own wrappers when React unmounts cleanly
-      const canvasEl = document.createElement("canvas");
-      canvasContainerRef.current.appendChild(canvasEl);
+	// Initialize Fabric Canvas
+	useEffect(() => {
+		if (isOpen && canvasContainerRef.current && !fabricCanvas.current) {
+			setSelectedClothes([]); // Clear selection when modal opens
+			const canvasEl = document.createElement('canvas');
+			canvasContainerRef.current.appendChild(canvasEl);
 
-      fabricCanvas.current = new fabric.Canvas(canvasEl, {
-        width: 800,
-        height: 600,
-        backgroundColor: "#ffffff",
-        preserveObjectStacking: true,
-      });
+			fabricCanvas.current = new fabric.Canvas(canvasEl, {
+				width: 800,
+				height: 600,
+				backgroundColor: '#ffffff',
+				preserveObjectStacking: true,
+			});
 
-      // Selection styles
-      fabric.Object.prototype.set({
-        transparentCorners: false,
-        cornerColor: "#000000",
-        cornerStyle: "circle",
-        borderColor: "#000000",
-        cornerSize: 8,
-        padding: 10,
-      });
+			fabric.Object.prototype.set({
+				transparentCorners: false,
+				cornerColor: '#000000',
+				cornerStyle: 'circle',
+				borderColor: '#000000',
+				cornerSize: 8,
+				padding: 10,
+			});
 
-      const updateToolbarPos = () => {
-        const activeObj = fabricCanvas.current?.getActiveObject();
-        if (activeObj) {
-          const rect = activeObj.getBoundingRect();
-          // Adjust for canvas position if needed, but here it's relative to container
-          setToolbarPos({
-            top: rect.top - 50,
-            left: rect.left + rect.width / 2,
-          });
-          setActiveObject(activeObj);
-        } else {
-          setActiveObject(null);
-        }
-      };
+			const updateToolbarPos = () => {
+				const activeObj = fabricCanvas.current?.getActiveObject();
+				if (activeObj) {
+					const rect = activeObj.getBoundingRect();
+					setToolbarPos({
+						top: rect.top + rect.height + 15,
+						left: rect.left + rect.width / 2,
+					});
+					setActiveObject(activeObj);
+				} else {
+					setActiveObject(null);
+				}
+			};
 
-      const canvas = fabricCanvas.current;
-      canvas.on('selection:created', updateToolbarPos);
-      canvas.on('selection:updated', updateToolbarPos);
-      canvas.on('selection:cleared', () => setActiveObject(null));
-      canvas.on('object:moving', updateToolbarPos);
-      canvas.on('object:scaling', updateToolbarPos);
-      canvas.on('object:rotating', updateToolbarPos);
-    }
+			const canvas = fabricCanvas.current;
+			canvas.on('selection:created', updateToolbarPos);
+			canvas.on('selection:updated', updateToolbarPos);
+			canvas.on('selection:cleared', () => setActiveObject(null));
+			canvas.on('object:moving', updateToolbarPos);
+			canvas.on('object:scaling', updateToolbarPos);
+			canvas.on('object:rotating', updateToolbarPos);
+		}
 
-    return () => {
-      if (fabricCanvas.current) {
-        fabricCanvas.current.dispose();
-        fabricCanvas.current = null;
-      }
-      if (canvasContainerRef.current) {
-        // Destroy the Fabric-generated .canvas-container on unmount
-        canvasContainerRef.current.innerHTML = '';
-      }
-    };
-  }, [isOpen]);
+		return () => {
+			if (fabricCanvas.current) {
+				fabricCanvas.current.dispose();
+				fabricCanvas.current = null;
+			}
+			if (canvasContainerRef.current) {
+				canvasContainerRef.current.innerHTML = '';
+			}
+		};
+	}, [isOpen]);
 
-  // Sync selected clothes with canvas
-  useEffect(() => {
-    if (!fabricCanvas.current) return;
+	useQuery('clothes', () => getClothes({ userId: userId }), {
+		onSuccess: (data: Clothe[]) => {
+			categorizeClothes({ data, setClothes });
+		},
+	});
 
-    const canvas = fabricCanvas.current;
-    const currentObjects = canvas.getObjects() as (fabric.Object & { clotheId?: string })[];
+	const { mutate: CreateOutfitMutate, isLoading: CreateOutfitIsLoading } = useMutation({
+		mutationFn: ({ clothes, colorScheme, notes, type }: NewOutfit) =>
+			createOutfit({ clothes, colorScheme, notes, type }),
+	});
 
-    // Add new items
-    selectedClothes.forEach((clothe) => {
-      const exists = currentObjects.some((obj) => obj.clotheId === clothe.id);
-      if (!exists) {
-        // Use the optimized Cloudinary URL and add a cache-buster
-        const optimizedUrl = getCloudinaryUrl(clothe.images[0].file, 400);
-        const imageUrl = new URL(optimizedUrl);
-        imageUrl.searchParams.append('t', Date.now().toString());
+	const handleSelectedClothes = (clothe: Clothe) => {
+		const isSelected = selectedClothes.find((item) => item.id === clothe.id);
+		if (isSelected) {
+			setSelectedClothes(selectedClothes.filter((item) => item.id !== clothe.id));
+			const canvas = fabricCanvas.current;
+			if (canvas) {
+				const objects = canvas.getObjects() as (fabric.Object & { clotheId?: string })[];
+				const toRemove = objects.find((obj) => obj.clotheId === clothe.id);
+				if (toRemove) {
+					canvas.remove(toRemove);
+					canvas.renderAll();
+				}
+			}
+		} else {
+			setSelectedClothes([...selectedClothes, clothe]);
+			const canvas = fabricCanvas.current;
+			if (canvas) {
+				const optimizedUrl = getCloudinaryUrl(clothe.images[0].file, 400);
+				const imageUrl = new URL(optimizedUrl);
+				imageUrl.searchParams.append('t', Date.now().toString());
 
-        fabric.Image.fromURL(imageUrl.toString(), (img) => {
-          if (!img) {
-            console.error("Fabric failed to load image:", imageUrl.toString());
-            return;
-          }
-          img.set({
-            left: 100 + Math.random() * 200,
-            top: 100 + Math.random() * 200,
-          });
-          img.scaleToWidth(200);
-          (img as any).clotheId = clothe.id;
-          canvas.add(img);
-          canvas.requestRenderAll();
-        }, { crossOrigin: 'anonymous' });
-      }
-    });
+				fabric.Image.fromURL(
+					imageUrl.toString(),
+					(img) => {
+						if (!img) return;
+						img.set({
+							left: 100 + Math.random() * 200,
+							top: 100 + Math.random() * 200,
+						});
+						img.scaleToWidth(200);
+						(img as any).clotheId = clothe.id;
+						canvas.add(img);
+						canvas.setActiveObject(img);
+						canvas.renderAll();
+					},
+					{ crossOrigin: 'anonymous' },
+				);
+			}
+		}
+	};
 
-    // Remove unselected items
-    currentObjects.forEach((obj) => {
-      if (obj.clotheId && !selectedClothes.some((c) => c.id === obj.clotheId)) {
-        canvas.remove(obj);
-      }
-    });
-  }, [selectedClothes]);
+	const handleNewOutfit = () => {
+		if (selectedClothes.length === 0) {
+			toast({ title: 'Please select at least one item', status: 'warning', position: 'top' });
+			return;
+		}
 
-  useQuery(
-    "clothes",
-    () => getClothes({ userId: userId }),
-    {
-      onSuccess: (data: Clothe[]) => {
-        categorizeClothes({ data, setClothes });
-      },
-    }
-  );
+		if (fabricCanvas.current) {
+			fabricCanvas.current.discardActiveObject();
+			fabricCanvas.current.requestRenderAll();
 
-  const { mutate: CreateOutfitMutate, isLoading: CreateOutfitIsLoading } =
-    useMutation({
-      mutationFn: ({ clothes, colorScheme, notes, type }: NewOutfit) =>
-        createOutfit({ clothes, colorScheme, notes, type }),
-    });
+			const dataUrl = fabricCanvas.current.toDataURL({
+				format: 'png',
+				quality: 1,
+				multiplier: 2, // High resolution
+			});
 
-  const handleSelectedClothes = (clothe: Clothe) => {
-    const isSelected = selectedClothes.find((item) => item.id === clothe.id);
-    if (isSelected) {
-      setSelectedClothes(selectedClothes.filter((item) => item.id !== clothe.id));
-    } else {
-      setSelectedClothes([...selectedClothes, clothe]);
-    }
-  };
+			// Convert dataUrl to File
+			fetch(dataUrl)
+				.then((res) => res.blob())
+				.then((blob) => {
+					const file = new File([blob], 'outfit.png', { type: 'image/png' });
 
-  const handleNewOutfit = () => {
-    if (selectedClothes.length === 0) {
-      toast({ title: "Please select at least one item", status: "warning", position: "top" });
-      return;
-    }
+					CreateOutfitMutate(
+						{
+							clothes: selectedClothes.map((item) => item.id),
+							colorScheme: colorScheme,
+							notes: notes,
+							type: type,
+							image: file,
+						},
+						{
+							onSuccess: () => {
+								toast({ title: 'Outfit curated', status: 'success', position: 'top' });
+								onClose();
+							},
+						},
+					);
+				});
+		} else {
+			// Fallback if canvas is not ready
+			CreateOutfitMutate(
+				{
+					clothes: selectedClothes.map((item) => item.id),
+					colorScheme: colorScheme,
+					notes: notes,
+					type: type,
+				},
+				{
+					onSuccess: () => {
+						toast({ title: 'Outfit curated', status: 'success', position: 'top' });
+						onClose();
+					},
+				},
+			);
+		}
+	};
 
-    if (fabricCanvas.current) {
-      fabricCanvas.current.discardActiveObject();
-      fabricCanvas.current.requestRenderAll();
-      
-      const dataUrl = fabricCanvas.current.toDataURL({
-        format: 'png',
-        quality: 1,
-        multiplier: 2 // High resolution
-      });
+	const handleClearCanvas = () => {
+		setSelectedClothes([]);
+		fabricCanvas.current?.clear();
+		if (fabricCanvas.current) {
+			fabricCanvas.current.backgroundColor = '#ffffff';
+			fabricCanvas.current.renderAll();
+		}
+		setActiveObject(null);
+	};
 
-      // Convert dataUrl to File
-      fetch(dataUrl)
-        .then(res => res.blob())
-        .then(blob => {
-          const file = new File([blob], "outfit.png", { type: "image/png" });
-          
-          CreateOutfitMutate(
-            {
-              clothes: selectedClothes.map((item) => item.id),
-              colorScheme: colorScheme,
-              notes: notes,
-              type: type,
-              image: file,
-            },
-            {
-              onSuccess: () => {
-                toast({ title: "Outfit curated", status: "success", position: "top" });
-                onClose();
-              },
-            }
-          );
-        });
-    } else {
-      // Fallback if canvas is not ready
-      CreateOutfitMutate(
-        {
-          clothes: selectedClothes.map((item) => item.id),
-          colorScheme: colorScheme,
-          notes: notes,
-          type: type,
-        },
-        {
-          onSuccess: () => {
-            toast({ title: "Outfit curated", status: "success", position: "top" });
-            onClose();
-          },
-        }
-      );
-    }
-  };
+	const deleteSelected = () => {
+		if (activeObject) {
+			const clotheId = (activeObject as any).clotheId;
+			if (clotheId) {
+				setSelectedClothes((prev) => prev.filter((c) => c.id !== clotheId));
+			}
+			fabricCanvas.current?.remove(activeObject);
+			fabricCanvas.current?.discardActiveObject();
+			setActiveObject(null);
+		}
+	};
 
-  const handleClearCanvas = () => {
-    setSelectedClothes([]);
-    fabricCanvas.current?.clear();
-    if (fabricCanvas.current) {
-        fabricCanvas.current.backgroundColor = "#ffffff";
-        fabricCanvas.current.renderAll();
-    }
-    setActiveObject(null);
-  };
+	const bringToFront = () => {
+		if (activeObject) {
+			fabricCanvas.current?.bringToFront(activeObject);
+			fabricCanvas.current?.requestRenderAll();
+		}
+	};
 
-  const deleteSelected = () => {
-    if (activeObject) {
-      const clotheId = (activeObject as any).clotheId;
-      if (clotheId) {
-        setSelectedClothes(prev => prev.filter(c => c.id !== clotheId));
-      }
-      fabricCanvas.current?.remove(activeObject);
-      fabricCanvas.current?.discardActiveObject();
-      setActiveObject(null);
-    }
-  };
+	const sendToBack = () => {
+		if (activeObject) {
+			fabricCanvas.current?.sendToBack(activeObject);
+			// Ensure background stays at the very back if it exists
+			if (fabricCanvas.current?.backgroundColor) {
+				// Fabric handles backgroundColor separately, so this is usually fine
+			}
+			fabricCanvas.current?.requestRenderAll();
+		}
+	};
 
-  const bringToFront = () => {
-    if (activeObject) {
-      fabricCanvas.current?.bringToFront(activeObject);
-      fabricCanvas.current?.requestRenderAll();
-    }
-  };
+	return (
+		<Modal isOpen={isOpen} onClose={onClose} isCentered title="OUTFIT CURATOR" maxW="95vw">
+			<ModalBody p={0}>
+				<Flex h="75vh" overflow="hidden">
+					{/* LEFT: Item Library */}
+					<Box w="300px" borderRight="1px solid" borderColor="neutral.200" overflowY="auto" p={6}>
+						<Heading size="xs" textTransform="uppercase" letterSpacing="widest" mb={6} color="neutral.400">
+							Library
+						</Heading>
+						<VStack spacing={8} align="stretch">
+							{CLOTHE_TYPES.map((type, idx) => {
+								const typeItems = clothes ? clothes[type.value] : [];
+								if (!typeItems || typeItems.length === 0) return null;
+								return (
+									<VStack key={idx} align="stretch" spacing={3}>
+										<Text fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="widest">
+											{type.label}
+										</Text>
+										<SimpleGrid columns={2} gap={2}>
+											{typeItems.map((clothe: Clothe) => (
+												<Box
+													key={clothe.id}
+													pos="relative"
+													cursor="pointer"
+													onClick={() => handleSelectedClothes(clothe)}
+													transition="all 0.2s"
+													_hover={{ opacity: 0.8 }}
+												>
+													<Image
+														src={getCloudinaryUrl(clothe.images[0].file, 200)}
+														boxSize="100px"
+														objectFit="cover"
+														border="1px solid"
+														borderColor={
+															selectedClothes.find((i) => i.id === clothe.id)
+																? 'brand.500'
+																: 'neutral.100'
+														}
+														filter={
+															selectedClothes.find((i) => i.id === clothe.id) ? 'none' : 'grayscale(1)'
+														}
+													/>
+												</Box>
+											))}
+										</SimpleGrid>
+									</VStack>
+								);
+							})}
+						</VStack>
+					</Box>
 
-  const sendToBack = () => {
-    if (activeObject) {
-      fabricCanvas.current?.sendToBack(activeObject);
-      // Ensure background stays at the very back if it exists
-      if (fabricCanvas.current?.backgroundColor) {
-        // Fabric handles backgroundColor separately, so this is usually fine
-      }
-      fabricCanvas.current?.requestRenderAll();
-    }
-  };
+					{/* CENTER: Canvas */}
+					<Flex flex="1" bg="neutral.50" pos="relative" justify="center" align="center" direction="column" p={8}>
+						<HStack
+							pos="absolute"
+							top={4}
+							left={4}
+							spacing={1}
+							onClick={handleClearCanvas}
+							cursor="pointer"
+							_hover={{ color: 'red.400', bg: 'gray.100' }}
+							transition="all 0.2s"
+							bg="white"
+							p={2}
+							px={4}
+							borderRadius="full"
+							zIndex={10}
+							boxShadow="sm"
+						>
+							<Icon as={IoCloseOutline} />
+							<Text
+								fontSize="xs"
+								fontWeight="700"
+								color="neutral.500"
+								textTransform="uppercase"
+								letterSpacing="widest"
+							>
+								Clear Canvas
+							</Text>
+						</HStack>
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      isCentered
-      title="OUTFIT CURATOR"
-      maxW="95vw"
-    >
-      <ModalBody p={0} >
-        <Flex h="75vh" overflow="hidden" >
-          {/* LEFT: Item Library */}
-          <Box w="300px" borderRight="1px solid" borderColor="neutral.200" overflowY="auto" p={6}>
-            <Heading size="xs" textTransform="uppercase" letterSpacing="widest" mb={6} color="neutral.400">
-              Library
-            </Heading>
-            <VStack spacing={8} align="stretch">
-              {CLOTHE_TYPES.map((type, idx) => {
-                const typeItems = clothes ? clothes[type.value] : [];
-                if (!typeItems || typeItems.length === 0) return null;
-                return (
-                  <VStack key={idx} align="stretch" spacing={3}>
-                    <Text fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="widest">
-                      {type.label}
-                    </Text>
-                    <SimpleGrid columns={2} gap={2}>
-                      {typeItems.map((clothe: Clothe) => (
-                        <Box
-                          key={clothe.id}
-                          pos="relative"
-                          cursor="pointer"
-                          onClick={() => handleSelectedClothes(clothe)}
-                          transition="all 0.2s"
-                          _hover={{ opacity: 0.8 }}
-                        >
-                          <Image
-                            src={getCloudinaryUrl(clothe.images[0].file, 200)}
-                            boxSize="100px"
-                            objectFit="cover"
-                            border="1px solid"
-                            borderColor={selectedClothes.find(i => i.id === clothe.id) ? "brand.500" : "neutral.100"}
-                            filter={selectedClothes.find(i => i.id === clothe.id) ? "none" : "grayscale(1)"}
-                          />
-                        </Box>
-                      ))}
-                    </SimpleGrid>
-                  </VStack>
-                );
-              })}
-            </VStack>
-          </Box>
+						<Box
+							bg="white"
+							boxShadow="0 20px 50px rgba(0,0,0,0.1)"
+							pos="relative"
+							overflow="hidden"
+							w="800px"
+							h="600px"
+						>
+							<div ref={canvasContainerRef} style={{ width: '100%', height: '100%' }} />
 
-          {/* CENTER: Canvas */}
-          <Flex flex="1" bg="neutral.50" pos="relative" justify="center" align="center" direction="column" p={8}>
-             <HStack pos="absolute" top={4} left={4} spacing={1} onClick={handleClearCanvas} cursor="pointer" _hover={{ color: "red.400" , bg: "gray.100"}} transition="all 0.2s" bg="white" p={2} px={4} borderRadius="full" zIndex={10} boxShadow="sm">
-                 <Icon as={IoCloseOutline} />
-                 <Text fontSize="xs" fontWeight="700" color="neutral.500" textTransform="uppercase" letterSpacing="widest">
-                   Clear Canvas
-                 </Text>
-             </HStack>
+							{/* Floating Object Toolbar */}
+							{activeObject && (
+								<HStack
+									pos="absolute"
+									top={`${toolbarPos.top}px`}
+									left={`${toolbarPos.left}px`}
+									transform="translateX(-50%)"
+									bg="white"
+									p={1}
+									borderRadius="full"
+									boxShadow="xl"
+									border="1px solid"
+									borderColor="neutral.100"
+									zIndex={20}
+									spacing={1}
+								>
+									<Tooltip label="Bring to Front" fontSize="xs">
+										<IconButton
+											aria-label="Bring to Front"
+											icon={<IoArrowForwardOutline style={{ transform: 'rotate(-90deg)' }} />}
+											size="sm"
+											variant="ghost"
+											onClick={(e) => {
+												e.stopPropagation();
+												bringToFront();
+											}}
+											rounded="full"
+										/>
+									</Tooltip>
+									<Tooltip label="Send to Back" fontSize="xs">
+										<IconButton
+											aria-label="Send to Back"
+											icon={<IoArrowBackOutline style={{ transform: 'rotate(-90deg)' }} />}
+											size="sm"
+											variant="ghost"
+											onClick={(e) => {
+												e.stopPropagation();
+												sendToBack();
+											}}
+											rounded="full"
+										/>
+									</Tooltip>
+									<Box w="1px" h="15px" bg="neutral.100" mx={1} />
+									<Tooltip label="Remove Item" fontSize="xs">
+										<IconButton
+											aria-label="Remove Item"
+											icon={<IoTrashOutline />}
+											size="sm"
+											variant="ghost"
+											colorScheme="red"
+											onClick={(e) => {
+												e.stopPropagation();
+												deleteSelected();
+											}}
+											rounded="full"
+										/>
+									</Tooltip>
+								</HStack>
+							)}
 
-            <Box 
-              bg="white" 
-              boxShadow="0 20px 50px rgba(0,0,0,0.1)" 
-              pos="relative"
-              overflow="hidden"
-              w="800px"
-              h="600px"
-            >
-              <div ref={canvasContainerRef} style={{ width: "100%", height: "100%" }} />
-              
-              {/* Floating Object Toolbar */}
-              {activeObject && (
-                <HStack
-                  pos="absolute"
-                  top={`${toolbarPos.top}px`}
-                  left={`${toolbarPos.left}px`}
-                  transform="translateX(-50%)"
-                  bg="white"
-                  p={1}
-                  borderRadius="full"
-                  boxShadow="xl"
-                  border="1px solid"
-                  borderColor="neutral.100"
-                  zIndex={20}
-                  spacing={1}
-                >
-                  <Tooltip label="Bring to Front" fontSize="xs">
-                    <IconButton
-                      aria-label="Bring to Front"
-                      icon={<IoArrowForwardOutline style={{ transform: "rotate(-90deg)" }} />}
-                      size="sm"
-                      variant="ghost"
-                      onClick={(e) => { e.stopPropagation(); bringToFront(); }}
-                      rounded="full"
-                    />
-                  </Tooltip>
-                  <Tooltip label="Send to Back" fontSize="xs">
-                    <IconButton
-                      aria-label="Send to Back"
-                      icon={<IoArrowBackOutline style={{ transform: "rotate(-90deg)" }} />}
-                      size="sm"
-                      variant="ghost"
-                      onClick={(e) => { e.stopPropagation(); sendToBack(); }}
-                      rounded="full"
-                    />
-                  </Tooltip>
-                  <Box w="1px" h="15px" bg="neutral.100" mx={1} />
-                  <Tooltip label="Remove Item" fontSize="xs">
-                    <IconButton
-                      aria-label="Remove Item"
-                      icon={<IoTrashOutline />}
-                      size="sm"
-                      variant="ghost"
-                      colorScheme="red"
-                      onClick={(e) => { e.stopPropagation(); deleteSelected(); }}
-                      rounded="full"
-                    />
-                  </Tooltip>
-                </HStack>
-              )}
+							{selectedClothes.length === 0 && (
+								<Flex pos="absolute" inset={0} align="center" justify="center" pointerEvents="none">
+									<Text color="neutral.300" textTransform="uppercase" letterSpacing="0.2em" fontWeight="300">
+										Select items to curate
+									</Text>
+								</Flex>
+							)}
+						</Box>
+					</Flex>
 
-              {selectedClothes.length === 0 && (
-                <Flex pos="absolute" inset={0} align="center" justify="center" pointerEvents="none">
-                  <Text color="neutral.300" textTransform="uppercase" letterSpacing="0.2em" fontWeight="300">
-                    Select items to curate
-                  </Text>
-                </Flex>
-              )}
-            </Box>
-          </Flex>
+					{/* RIGHT: Curate Panel */}
+					<Box w="350px" borderLeft="1px solid" borderColor="neutral.200" p={8} overflowY="auto">
+						<Heading size="xs" textTransform="uppercase" letterSpacing="widest" mb={8} color="neutral.400">
+							Curation
+						</Heading>
+						<VStack spacing={6} align="stretch">
+							<Select
+								onChange={(e: any) => setType(e.target.value)}
+								options={OUTFIT_TYPES}
+								placeholder="OCCASION"
+							/>
+							<Box>
+								<Text fontSize="xs" fontWeight="700" mb={2} textTransform="uppercase" letterSpacing="widest">
+									Color Palette
+								</Text>
+								<Textarea
+									placeholder="E.g., Monochrome charcoal, Gold accents..."
+									onChange={(e) => setColorScheme(e.target.value)}
+									borderRadius="0"
+									borderColor="neutral.100"
+									size="sm"
+								/>
+							</Box>
+							<Box>
+								<Text fontSize="xs" fontWeight="700" mb={2} textTransform="uppercase" letterSpacing="widest">
+									Styling Notes
+								</Text>
+								<Textarea
+									placeholder="Add editorial notes..."
+									onChange={(e) => setNotes(e.target.value)}
+									borderRadius="0"
+									borderColor="neutral.100"
+									h="120px"
+									size="sm"
+								/>
+							</Box>
+						</VStack>
+					</Box>
+				</Flex>
+			</ModalBody>
 
-          {/* RIGHT: Curate Panel */}
-          <Box w="350px" borderLeft="1px solid" borderColor="neutral.200" p={8} overflowY="auto">
-            <Heading size="xs" textTransform="uppercase" letterSpacing="widest" mb={8} color="neutral.400">
-              Curation
-            </Heading>
-            <VStack spacing={6} align="stretch">
-              <Select
-                onChange={(e: any) => setType(e.target.value)}
-                options={OUTFIT_TYPES}
-                placeholder="OCCASION"
-              />
-              <Box>
-                <Text fontSize="xs" fontWeight="700" mb={2} textTransform="uppercase" letterSpacing="widest">Color Palette</Text>
-                <Textarea 
-                  placeholder="E.g., Monochrome charcoal, Gold accents..."
-                  onChange={(e) => setColorScheme(e.target.value)}
-                  borderRadius="0"
-                  borderColor="neutral.100"
-                  size="sm"
-                />
-              </Box>
-              <Box>
-                <Text fontSize="xs" fontWeight="700" mb={2} textTransform="uppercase" letterSpacing="widest">Styling Notes</Text>
-                <Textarea 
-                  placeholder="Add editorial notes..."
-                  onChange={(e) => setNotes(e.target.value)}
-                  borderRadius="0"
-                  borderColor="neutral.100"
-                  h="120px"
-                  size="sm"
-                />
-              </Box>
-            </VStack>
-          </Box>
-        </Flex>
-      </ModalBody>
-      
-      <ModalFooter borderTop="1px solid" borderColor="neutral.100" p={6}>
-        <HStack w="100%" spacing={6} justify="flex-end">
-          <Button text="CANCEL" variant="ghost" onClick={onClose} />
-          <Button 
-            text="FINALIZE OUTFIT" 
-            onClick={handleNewOutfit} 
-            isLoading={CreateOutfitIsLoading}
-            isDisabled={selectedClothes.length === 0}
-          />
-        </HStack>
-      </ModalFooter>
-    </Modal>
-  );
+			<ModalFooter borderTop="1px solid" borderColor="neutral.100" p={6}>
+				<HStack w="100%" spacing={6} justify="flex-end">
+					<Button text="CANCEL" variant="ghost" onClick={onClose} />
+					<Button
+						text="FINALIZE OUTFIT"
+						onClick={handleNewOutfit}
+						isLoading={CreateOutfitIsLoading}
+						isDisabled={selectedClothes.length === 0}
+					/>
+				</HStack>
+			</ModalFooter>
+		</Modal>
+	);
 };
 
 export default CreateOutfit;
