@@ -3,8 +3,6 @@ import {
 	Box,
 	Image,
 	HStack,
-	ModalBody,
-	ModalFooter,
 	VStack,
 	useToast,
 	Text,
@@ -20,7 +18,7 @@ import { useMutation, useQuery } from 'react-query';
 import { authStore } from '../../../store/authStore';
 import { CategorizedClothes, Clothe } from '../../../interfaces/clothe';
 import { CLOTHE_TYPES } from '../../../constants/clotheTypes';
-import Modal from '../../../components/ui/Modal';
+// removed Modal import
 import { getClothes } from '../../../services/clothe';
 import { NewOutfit } from '../../../interfaces/outfit';
 import { createOutfit } from '../../../services/outfit';
@@ -32,12 +30,7 @@ import { IoCloseOutline, IoTrashOutline, IoArrowForwardOutline, IoArrowBackOutli
 import { fabric } from 'fabric';
 import { getCloudinaryUrl } from '../../../utils/cloudinary.utils';
 
-interface CreateOutfitProps {
-	isOpen: any;
-	onClose: any;
-}
-
-const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
+const CreateOutfit: FC = () => {
 	const { userId } = authStore((state) => state);
 	const [clothes, setClothes] = useState<CategorizedClothes>();
 	const [selectedClothes, setSelectedClothes] = useState<Clothe[]>([]);
@@ -53,8 +46,7 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
 
 	// Initialize Fabric Canvas
 	useEffect(() => {
-		if (isOpen && canvasContainerRef.current && !fabricCanvas.current) {
-			setSelectedClothes([]); // Clear selection when modal opens
+		if (canvasContainerRef.current && !fabricCanvas.current) {
 			const canvasEl = document.createElement('canvas');
 			canvasContainerRef.current.appendChild(canvasEl);
 
@@ -106,7 +98,7 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
 				canvasContainerRef.current.innerHTML = '';
 			}
 		};
-	}, [isOpen]);
+	}, []);
 
 	useQuery('clothes', () => getClothes({ userId: userId }), {
 		onSuccess: (data: Clothe[]) => {
@@ -193,7 +185,7 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
 						{
 							onSuccess: () => {
 								toast({ title: 'Outfit curated', status: 'success', position: 'top' });
-								onClose();
+								handleClearCanvas();
 							},
 						},
 					);
@@ -210,7 +202,7 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
 				{
 					onSuccess: () => {
 						toast({ title: 'Outfit curated', status: 'success', position: 'top' });
-						onClose();
+						handleClearCanvas();
 					},
 				},
 			);
@@ -258,8 +250,16 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
 	};
 
 	return (
-		<Modal isOpen={isOpen} onClose={onClose} isCentered title="OUTFIT CURATOR" maxW="95vw">
-			<ModalBody p={0}>
+		<Box
+			w="100%"
+			bg="white"
+			borderRadius="md"
+			boxShadow="sm"
+			border="1px solid"
+			borderColor="neutral.200"
+			overflow="hidden"
+		>
+			<Box p={0}>
 				<Flex h="75vh" overflow="hidden">
 					{/* LEFT: Item Library */}
 					<Box w="300px" borderRight="1px solid" borderColor="neutral.200" overflowY="auto" p={6}>
@@ -417,51 +417,59 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
 							)}
 						</Box>
 					</Flex>
-
-					{/* RIGHT: Curate Panel */}
-					<Box w="350px" borderLeft="1px solid" borderColor="neutral.200" p={8} overflowY="auto">
-						<Heading size="xs" textTransform="uppercase" letterSpacing="widest" mb={8} color="neutral.400">
-							Curation
-						</Heading>
-						<VStack spacing={6} align="stretch">
-							<Select
-								onChange={(e: any) => setType(e.target.value)}
-								options={OUTFIT_TYPES}
-								placeholder="OCCASION"
-							/>
-							<Box>
-								<Text fontSize="xs" fontWeight="700" mb={2} textTransform="uppercase" letterSpacing="widest">
-									Color Palette
-								</Text>
-								<Textarea
-									placeholder="E.g., Monochrome charcoal, Gold accents..."
-									onChange={(e) => setColorScheme(e.target.value)}
-									borderRadius="0"
-									borderColor="neutral.100"
-									size="sm"
-								/>
-							</Box>
-							<Box>
-								<Text fontSize="xs" fontWeight="700" mb={2} textTransform="uppercase" letterSpacing="widest">
-									Styling Notes
-								</Text>
-								<Textarea
-									placeholder="Add editorial notes..."
-									onChange={(e) => setNotes(e.target.value)}
-									borderRadius="0"
-									borderColor="neutral.100"
-									h="120px"
-									size="sm"
-								/>
-							</Box>
-						</VStack>
-					</Box>
 				</Flex>
-			</ModalBody>
+				{/* RIGHT: Curate Panel */}
+				<Box borderLeft="1px solid" borderColor="neutral.200" p={8} overflowY="auto">
+					<Heading size="xs" textTransform="uppercase" letterSpacing="widest" mb={8} color="neutral.400">
+						Curation
+					</Heading>
+					<HStack spacing={6} align="stretch">
+						<Select
+							onChange={(e: any) => setType(e.target.value)}
+							options={OUTFIT_TYPES}
+							placeholder="OCCASION"
+							width="fit-content"
+						/>
+						<Box>
+							<Text
+								fontSize="xs"
+								fontWeight="700"
+								mb={2}
+								textTransform="uppercase"
+								letterSpacing="widest"
+								minW="30rem"
+							>
+								Color Palette
+							</Text>
+							<Textarea
+								placeholder="E.g., Monochrome charcoal, Gold accents..."
+								onChange={(e) => setColorScheme(e.target.value)}
+								borderRadius="0"
+								borderColor="neutral.100"
+								size="sm"
+							/>
+						</Box>
+						<Box>
+							<Text fontSize="xs" fontWeight="700" mb={2} textTransform="uppercase" letterSpacing="widest">
+								Styling Notes
+							</Text>
+							<Textarea
+								placeholder="Add editorial notes..."
+								onChange={(e) => setNotes(e.target.value)}
+								borderRadius="0"
+								borderColor="neutral.100"
+								// h="100px"
+								size="sm"
+								minW="30rem"
+							/>
+						</Box>
+					</HStack>
+				</Box>
+			</Box>
 
-			<ModalFooter borderTop="1px solid" borderColor="neutral.100" p={6}>
+			<Box borderTop="1px solid" borderColor="neutral.100" p={6}>
 				<HStack w="100%" spacing={6} justify="flex-end">
-					<Button text="CANCEL" variant="ghost" onClick={onClose} />
+					<Button text="CLEAR ALL" variant="ghost" onClick={handleClearCanvas} />
 					<Button
 						text="FINALIZE OUTFIT"
 						onClick={handleNewOutfit}
@@ -469,8 +477,8 @@ const CreateOutfit: FC<CreateOutfitProps> = ({ isOpen, onClose }) => {
 						isDisabled={selectedClothes.length === 0}
 					/>
 				</HStack>
-			</ModalFooter>
-		</Modal>
+			</Box>
+		</Box>
 	);
 };
 
