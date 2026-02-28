@@ -13,6 +13,7 @@ import {
 	Icon,
 	IconButton,
 	Tooltip,
+	Divider,
 } from '@chakra-ui/react';
 import { useMutation, useQuery } from 'react-query';
 import { authStore } from '../../../store/authStore';
@@ -26,7 +27,13 @@ import { categorizeClothes } from '../../../utils/categorizeClothes';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import { OUTFIT_TYPES } from '../../../constants/outfittypes';
-import { IoCloseOutline, IoTrashOutline, IoArrowForwardOutline, IoArrowBackOutline } from 'react-icons/io5';
+import {
+	IoCloseOutline,
+	IoTrashOutline,
+	IoArrowForwardOutline,
+	IoArrowBackOutline,
+	IoLayersOutline,
+} from 'react-icons/io5';
 import { fabric } from 'fabric';
 import { getCloudinaryUrl } from '../../../utils/cloudinary.utils';
 
@@ -250,234 +257,227 @@ const CreateOutfit: FC = () => {
 	};
 
 	return (
-		<Box
-			w="100%"
-			bg="white"
-			borderRadius="md"
-			boxShadow="sm"
-			border="1px solid"
-			borderColor="neutral.200"
-			overflow="hidden"
-		>
-			<Box p={0}>
-				<Flex h="75vh" overflow="hidden">
-					{/* LEFT: Item Library */}
-					<Box w="300px" borderRight="1px solid" borderColor="neutral.200" overflowY="auto" p={6}>
-						<Heading size="xs" textTransform="uppercase" letterSpacing="widest" mb={6} color="neutral.400">
-							Library
+		<Box h="calc(100vh - 100px)" bg="white" overflow="hidden">
+			<Flex h="100%" direction={{ base: 'column', lg: 'row' }}>
+				{/* LEFT: Library Sidebar */}
+				<Box
+					w={{ base: '100%', lg: '320px' }}
+					borderRight="1px solid"
+					borderColor="gray.100"
+					display="flex"
+					flexDirection="column"
+				>
+					<Box p={5} borderBottom="1px solid" borderColor="gray.50">
+						<Heading size="xs" textTransform="uppercase" letterSpacing="widest" color="gray.500">
+							Closet Library
 						</Heading>
+					</Box>
+					<Box flex="1" overflowY="auto" p={5}>
 						<VStack spacing={8} align="stretch">
 							{CLOTHE_TYPES.map((type, idx) => {
 								const typeItems = clothes ? clothes[type.value] : [];
 								if (!typeItems || typeItems.length === 0) return null;
 								return (
-									<VStack key={idx} align="stretch" spacing={3}>
-										<Text fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="widest">
+									<Box key={idx}>
+										<Text fontSize="xs" fontWeight="bold" mb={3} color="gray.400" letterSpacing="tighter">
 											{type.label}
 										</Text>
-										<SimpleGrid columns={2} gap={2}>
-											{typeItems.map((clothe: Clothe) => (
-												<Box
-													key={clothe.id}
-													pos="relative"
-													cursor="pointer"
-													onClick={() => handleSelectedClothes(clothe)}
-													transition="all 0.2s"
-													_hover={{ opacity: 0.8 }}
-												>
-													<Image
-														src={getCloudinaryUrl(clothe.images[0].file, 200)}
-														boxSize="100px"
-														objectFit="cover"
-														border="1px solid"
-														borderColor={
-															selectedClothes.find((i) => i.id === clothe.id)
-																? 'brand.500'
-																: 'neutral.100'
-														}
-														filter={
-															selectedClothes.find((i) => i.id === clothe.id) ? 'none' : 'grayscale(1)'
-														}
-													/>
-												</Box>
-											))}
+										<SimpleGrid columns={2} spacing={3}>
+											{typeItems.map((clothe: Clothe) => {
+												const isSelected = selectedClothes.some((i) => i.id === clothe.id);
+												return (
+													<Box
+														key={clothe.id}
+														onClick={() => handleSelectedClothes(clothe)}
+														cursor="pointer"
+														pos="relative"
+														borderRadius="md"
+														overflow="hidden"
+														transition="transform 0.2s"
+														_hover={{ transform: 'translateY(-2px)' }}
+													>
+														<Image
+															src={getCloudinaryUrl(clothe.images[0].file, 200)}
+															border="2px solid"
+															borderColor={isSelected ? 'black' : 'transparent'}
+															filter={isSelected ? 'none' : 'grayscale(0.4)'}
+															opacity={isSelected ? 1 : 0.8}
+														/>
+													</Box>
+												);
+											})}
 										</SimpleGrid>
-									</VStack>
+									</Box>
 								);
 							})}
 						</VStack>
 					</Box>
-
-					{/* CENTER: Canvas */}
-					<Flex flex="1" bg="neutral.50" pos="relative" justify="center" align="center" direction="column" p={8}>
-						<HStack
-							pos="absolute"
-							top={4}
-							left={4}
-							spacing={1}
-							onClick={handleClearCanvas}
-							cursor="pointer"
-							_hover={{ color: 'red.400', bg: 'gray.100' }}
-							transition="all 0.2s"
-							bg="white"
-							p={2}
-							px={4}
-							borderRadius="full"
-							zIndex={10}
-							boxShadow="sm"
-						>
-							<Icon as={IoCloseOutline} />
-							<Text
-								fontSize="xs"
-								fontWeight="700"
-								color="neutral.500"
-								textTransform="uppercase"
-								letterSpacing="widest"
-							>
-								Clear Canvas
-							</Text>
-						</HStack>
-
-						<Box
-							bg="white"
-							boxShadow="0 20px 50px rgba(0,0,0,0.1)"
-							pos="relative"
-							overflow="hidden"
-							w="800px"
-							h="600px"
-						>
-							<div ref={canvasContainerRef} style={{ width: '100%', height: '100%' }} />
-
-							{/* Floating Object Toolbar */}
-							{activeObject && (
-								<HStack
-									pos="absolute"
-									top={`${toolbarPos.top}px`}
-									left={`${toolbarPos.left}px`}
-									transform="translateX(-50%)"
-									bg="white"
-									p={1}
-									borderRadius="full"
-									boxShadow="xl"
-									border="1px solid"
-									borderColor="neutral.100"
-									zIndex={20}
-									spacing={1}
-								>
-									<Tooltip label="Bring to Front" fontSize="xs">
-										<IconButton
-											aria-label="Bring to Front"
-											icon={<IoArrowForwardOutline style={{ transform: 'rotate(-90deg)' }} />}
-											size="sm"
-											variant="ghost"
-											onClick={(e) => {
-												e.stopPropagation();
-												bringToFront();
-											}}
-											rounded="full"
-										/>
-									</Tooltip>
-									<Tooltip label="Send to Back" fontSize="xs">
-										<IconButton
-											aria-label="Send to Back"
-											icon={<IoArrowBackOutline style={{ transform: 'rotate(-90deg)' }} />}
-											size="sm"
-											variant="ghost"
-											onClick={(e) => {
-												e.stopPropagation();
-												sendToBack();
-											}}
-											rounded="full"
-										/>
-									</Tooltip>
-									<Box w="1px" h="15px" bg="neutral.100" mx={1} />
-									<Tooltip label="Remove Item" fontSize="xs">
-										<IconButton
-											aria-label="Remove Item"
-											icon={<IoTrashOutline />}
-											size="sm"
-											variant="ghost"
-											colorScheme="red"
-											onClick={(e) => {
-												e.stopPropagation();
-												deleteSelected();
-											}}
-											rounded="full"
-										/>
-									</Tooltip>
-								</HStack>
-							)}
-
-							{selectedClothes.length === 0 && (
-								<Flex pos="absolute" inset={0} align="center" justify="center" pointerEvents="none">
-									<Text color="neutral.300" textTransform="uppercase" letterSpacing="0.2em" fontWeight="300">
-										Select items to curate
-									</Text>
-								</Flex>
-							)}
-						</Box>
-					</Flex>
-				</Flex>
-				{/* RIGHT: Curate Panel */}
-				<Box borderLeft="1px solid" borderColor="neutral.200" p={8} overflowY="auto">
-					<Heading size="xs" textTransform="uppercase" letterSpacing="widest" mb={8} color="neutral.400">
-						Curation
-					</Heading>
-					<HStack spacing={6} align="stretch">
-						<Select
-							onChange={(e: any) => setType(e.target.value)}
-							options={OUTFIT_TYPES}
-							placeholder="OCCASION"
-							width="fit-content"
-						/>
-						<Box>
-							<Text
-								fontSize="xs"
-								fontWeight="700"
-								mb={2}
-								textTransform="uppercase"
-								letterSpacing="widest"
-								minW="30rem"
-							>
-								Color Palette
-							</Text>
-							<Textarea
-								placeholder="E.g., Monochrome charcoal, Gold accents..."
-								onChange={(e) => setColorScheme(e.target.value)}
-								borderRadius="0"
-								borderColor="neutral.100"
-								size="sm"
-							/>
-						</Box>
-						<Box>
-							<Text fontSize="xs" fontWeight="700" mb={2} textTransform="uppercase" letterSpacing="widest">
-								Styling Notes
-							</Text>
-							<Textarea
-								placeholder="Add editorial notes..."
-								onChange={(e) => setNotes(e.target.value)}
-								borderRadius="0"
-								borderColor="neutral.100"
-								// h="100px"
-								size="sm"
-								minW="30rem"
-							/>
-						</Box>
-					</HStack>
 				</Box>
-			</Box>
 
-			<Box borderTop="1px solid" borderColor="neutral.100" p={6}>
-				<HStack w="100%" spacing={6} justify="flex-end">
-					<Button text="CLEAR ALL" variant="ghost" onClick={handleClearCanvas} />
+				{/* CENTER: The Canvas Workspace */}
+				<Flex flex="1" bg="gray.50" pos="relative" direction="column" align="center" justify="center" p={8}>
+					<HStack
+						pos="absolute"
+						top={6}
+						zIndex={10}
+						bg="white"
+						p={1}
+						borderRadius="full"
+						shadow="sm"
+						border="1px solid"
+						borderColor="gray.200"
+					>
+						<Button
+							text="CLEAR"
+							variant="ghost"
+							onClick={() => fabricCanvas.current?.clear()}
+							backgroundColor="transparent"
+							_hover={{ backgroundColor: 'transparent' }}
+							color="black"
+						/>
+						<Divider orientation="vertical" h="20px" />
+						<Text fontSize="xs" fontWeight="bold" px={4} color="gray.500">
+							{selectedClothes.length} ITEMS SELECTED
+						</Text>
+					</HStack>
+
+					<Box
+						bg="white"
+						shadow="2xl"
+						borderRadius="xl"
+						overflow="hidden"
+						w="100%"
+						maxW="800px"
+						h="100%"
+						maxH="700px"
+						pos="relative"
+					>
+						<div ref={canvasContainerRef} style={{ width: '100%', height: '100%' }} />
+
+						{/* Floating Toolbar Fix */}
+						{activeObject && (
+							<HStack
+								pos="absolute"
+								top={`${toolbarPos.top}px`}
+								left={`${toolbarPos.left}px`}
+								transform="translateX(-50%)"
+								bg="black"
+								p={1}
+								borderRadius="lg"
+								shadow="dark-lg"
+								zIndex={20}
+							>
+								<IconButton
+									aria-label="Bring to Front"
+									icon={<IoArrowForwardOutline style={{ transform: 'rotate(-90deg)' }} />}
+									size="sm"
+									color="white"
+									variant="unstyled"
+									onClick={(e) => {
+										e.stopPropagation();
+										bringToFront();
+									}}
+									rounded="full"
+									display="flex"
+									justifyContent="center"
+								/>
+								<IconButton
+									aria-label="Send to Back"
+									icon={<IoArrowBackOutline style={{ transform: 'rotate(-90deg)' }} />}
+									size="sm"
+									color="white"
+									variant="unstyled"
+									onClick={(e) => {
+										e.stopPropagation();
+										sendToBack();
+									}}
+									rounded="full"
+									display="flex"
+									justifyContent="center"
+								/>
+								<IconButton
+									size="sm"
+									variant="unstyled"
+									color="white"
+									icon={<IoTrashOutline />}
+									onClick={() => {
+										fabricCanvas.current?.remove(activeObject);
+										setSelectedClothes((prev) => prev.filter((c) => (activeObject as any).clotheId !== c.id));
+									}}
+									aria-label="Delete"
+									display="flex"
+									justifyContent="center"
+								/>
+							</HStack>
+						)}
+					</Box>
+				</Flex>
+
+				{/* RIGHT: Curation Form */}
+				<Box
+					w={{ base: '100%', lg: '380px' }}
+					borderLeft="1px solid"
+					borderColor="gray.100"
+					p={8}
+					bg="white"
+					display="flex"
+					flexDirection="column"
+				>
+					<Heading size="xs" textTransform="uppercase" letterSpacing="widest" mb={8} color="gray.500">
+						Outfit Details
+					</Heading>
+
+					<VStack spacing={6} align="stretch" flex="1">
+						<Box>
+							<Text fontSize="xs" fontWeight="800" mb={2}>
+								OCCASION
+							</Text>
+							<Select
+								onChange={(e: any) => setType(e.target.value)}
+								options={OUTFIT_TYPES}
+								placeholder="Select Occasion..."
+							/>
+						</Box>
+
+						<Box>
+							<Text fontSize="xs" fontWeight="800" mb={2}>
+								COLOR PALETTE
+							</Text>
+							<Textarea
+								placeholder="E.g., Earthy tones with gold accents"
+								onChange={(e) => setColorScheme(e.target.value)}
+								bg="gray.50"
+								border="none"
+								_focus={{ bg: 'white', ring: '1px solid black' }}
+							/>
+						</Box>
+
+						<Box>
+							<Text fontSize="xs" fontWeight="800" mb={2}>
+								STYLING NOTES
+							</Text>
+							<Textarea
+								placeholder="How should this be worn?"
+								h="120px"
+								onChange={(e) => setNotes(e.target.value)}
+								bg="gray.50"
+								border="none"
+								_focus={{ bg: 'white', ring: '1px solid black' }}
+							/>
+						</Box>
+					</VStack>
+
 					<Button
-						text="FINALIZE OUTFIT"
-						onClick={handleNewOutfit}
-						isLoading={CreateOutfitIsLoading}
+						text="SAVE OUTFIT"
+						w="100%"
+						h="50px"
+						onClick={() => {
+							/* Call mutate */
+						}}
 						isDisabled={selectedClothes.length === 0}
 					/>
-				</HStack>
-			</Box>
+				</Box>
+			</Flex>
 		</Box>
 	);
 };
